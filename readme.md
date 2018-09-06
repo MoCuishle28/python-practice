@@ -20,6 +20,6 @@ chapter09：socket
 
 chapter10：多线程 多进程
 
-chapter11：yield from
+chapter11：同步 异步 并发 select技术 以及yield from
 
 chapter12：aiohttp
