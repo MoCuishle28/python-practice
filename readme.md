@@ -2,14 +2,24 @@
 
 chapter01：一切皆是对象
 
-chapter02：
+chapter02：魔法函数
 
-chapter03：
+chapter03：python的类 上下文管理器
 
-chapter04：
+chapter04：序列类型
 
-chapter05：
+chapter05：dict和set
 
-chapter06：
+chapter06：python变量的实际 垃圾回收
 
-chapter07：
+chapter07：元类编程 ORM
+
+chapter08：生成器
+
+chapter09：socket
+
+chapter10：多线程 多进程
+
+chapter11：yield from
+
+chapter12：aiohttp
