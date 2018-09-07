@@ -22,4 +22,6 @@ chapter10：多线程 多进程
 
 chapter11：同步 异步 并发 select技术 以及yield from
 
-chapter12：aiohttp
+chapter12：aiohttp	(用到的包 aiohttp, aiomysql, pyquery)
+
+解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/
