@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
 	# 批量提交
 	tasks = [get_html('http://www.imooc.com') for i in range(10)]
-	loop.run_until_complete(asyncio.wait(tasks))		# 阻塞的方法 类似于join方法 传入协程函数
+	loop.run_until_complete(asyncio.wait(tasks))		# 阻塞的方法 类似于join方法 传入协程函数(注册协程)
 
 	print('time:', time.time() - start_time)
 
