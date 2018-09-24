@@ -24,7 +24,12 @@ chapter11：	同步 异步 并发 select技术 以及yield from
 
 chapter12：	aiohttp	(用到的包 aiohttp, aiomysql, pyquery)
 
-chapter13: 	数据库操作练习 包括MySQL, MongoDB, Redis (用到的包 mysqlclient, flask, Flask-SQLAlchemy, pymongo ...)
-			做一个新闻网站项目
+chapter13: 	数据库操作练习 包括MySQL, MongoDB, Redis 
+			用到的包: mysqlclient 
+					 flask, Flask-SQLAlchemy	文档：	Flask https://dormousehole.readthedocs.io/en/latest/
+														Flask-SQLAlchemy http://www.pythondoc.com/flask-sqlalchemy/quickstart.html
+					 mongoengine(依赖pymongo)  	文档：	pymongo http://api.mongodb.com/python/current/  
+														mongoengine http://docs.mongoengine.org/tutorial.html
+					 flask-mongoengine			文档： 	https://flask-mongoengine.readthedocs.io/en/latest/	(依赖 mongoengine)
 
 解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/
