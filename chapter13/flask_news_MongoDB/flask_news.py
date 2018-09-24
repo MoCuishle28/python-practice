@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from flask_mongoengine import MongoEngine, first_or_404
+from flask_mongoengine import MongoEngine
 from datetime import datetime
 
 
@@ -20,14 +20,13 @@ NEWS_TYPES = (
 
 
 class News(db.Document):
-	ID = db.Column('id', db.Integer, primary_key=True)
 	title = db.StringField(required=True, max_length=200)
 	content = db.StringField(required=True, choices=NEWS_TYPES)
 	news_type = db.StringField(required=True)
 	img_url = db.StringField()
- 	is_valid = db.BooleanField(default=True)
- 	created_at = db.DateTimeField(default=datetime.now())
- 	updated_at = db.DateTimeField(default=datetime.now())	# 最后编辑时间
+	is_valid = db.BooleanField(default=True)
+	created_at = db.DateTimeField(default=datetime.now())
+	updated_at = db.DateTimeField(default=datetime.now())	# 最后编辑时间
 	# 还可以扩展 比如加上评论
 
 	meta = {
@@ -57,7 +56,7 @@ def cat(name):
 @app.route('/detail/<pk>/')
 def detail(pk):
 	'''新闻详情'''
-	new_obj = News.objects.first_or_404(pk=pk)
+	new_obj = News.objects.first_or_404(_id=pk)
 	return render_template('detail.html', pk=pk, new_obj=new_obj)
 
 if __name__ == '__main__':
