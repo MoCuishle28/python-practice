@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+
+<div class="container">
+	{% for book in bookList %}
+
+	<p>{{book['title']}}</p>
+	<p>{{book['author']}}</p>
+
+	{% if loop.index%2 == 0 %}
+	<p>两个了</p>
+	<hr>
+	{% endif %}
+	{% endfor %}
+	
+</div>
+
+</body>
+</html>

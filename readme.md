@@ -31,5 +31,11 @@ chapter13: 	数据库操作练习 包括MySQL, MongoDB, Redis
 					 mongoengine(依赖pymongo)  	文档：	pymongo http://api.mongodb.com/python/current/  
 														mongoengine http://docs.mongoengine.org/tutorial.html
 					 flask-mongoengine			文档： 	https://flask-mongoengine.readthedocs.io/en/latest/	(依赖 mongoengine)
+					 
+project1:	数据库应用 写一个赠送图书的网站zonda  
+			用到的包: 
+				Flask
+				requests
+				beautifulsoup4					文档(中文): 	https://beautifulsoup.readthedocs.io/zh_CN/v4.4.0/
 
 解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/

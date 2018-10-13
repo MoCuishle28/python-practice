@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>第一个bootstrap用例</title>
+	<meta charset="utf-8">
+	<!-- 以IE最高版本edge渲染 -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+	<!-- 准备环境 -->
+	<link rel="stylesheet" href="../bootstrap-3.3.7-dist/css/bootstrap.min.css">
+
+    <!-- 适配移动端网页 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- 各种浏览器样式的初始化 -->
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.css" rel="stylesheet">
+
+	<style type="text/css">
+		/*测试布局方便查看*/
+		.row div{
+			border: 1px solid red;
+		}
+
+		.c1{
+			height: 100px;
+			width: 100px;
+			background-color: red;
+		}
+		/*当显示器screen 宽度小于600px时 c1使用下面样式*/
+		@media screen and (max-width: 600px){
+			.c1{
+				background-color: black;
+			}
+		}
+	</style>
+
+</head>
+<body>
+
+<div class="container">
+	<button class="btn btn-danger">危险！</button>
+	<button class="btn btn-primary">蓝色	</button>
+	<button class="btn btn-primary btn-lg">变大按钮</button>
+</div>
+
+<!-- 布局类 container 会左右留出一定边距 -->
+<div class="container">
+	<!-- continer的栅格系统 把内容分成一行一行 -->
+	<div class="row">
+		<!-- 每一行可以分成列 共12列 -->
+		<div class="col-md-4 col-xs-4">占4列</div>
+		<div class="col-md-4 col-xs-4">占4列</div>
+		<div class="col-md-4 col-xs-4">占4列</div>
+	</div>
+
+	<div class="row">
+		<!-- 偏移系统 col-md-offset-2偏移两列开始放以下这列 -->
+		<div class="col-md-5 col-xs-5 col-md-offset-2 col-xs-offset-2 ">前面空两列</div>	
+	</div>
+
+	<div class="row">
+		<div class="col-md-3 col-xs-3 ">占3列</div>
+		<div class="col-md-6 col-xs-6 ">占6列</div>
+	</div>
+
+</div>
+
+
+<!-- 媒体查询 根据设备情况显示样式 -->
+<div class="c1"></div>
+
+
+<h1>大标题 <small>副标题</small></h1>
+<p>普通内容</p>
+<p class="lead">中心思想突出 .lead  <mark>高亮文本</mark> </p>
+<p>被删除内容在右边 <del>被删除</del> </p>
+<p class="text-center">
+	居中对齐 
+	<strong>加粗加黑</strong>
+</p>
+
+<!-- 基本缩略语 -->
+<abbr title="attribute"> attr </abbr>
+
+<br>
+<address>
+	<!-- 地址 -->
+	<strong>铁锤</strong><br>
+	二坨子屯牛头湾南走15.273步 <br>
+	国际憨憨中心	<br>
+	<abbr title="Phone">P:</abbr> 1233211234567
+</address>
+
+<address>
+	<strong>铁憨憨</strong> <br>
+	<a href="hahahaha">tiehanhan@hanhan.com</a>
+</address>
+
+
+<br>
+<blockquote>
+	<!-- 表示引用 -->
+	<p>铁憨憨，憨憨铁</p>
+	<footer>铁锤宝典 <cite>王铁锤</cite>	</footer>
+</blockquote>
+
+<!-- list-inline 让列表横着摆 做导航条 -->
+<ul class="list-inline">
+	<li>111</li>
+	<li>222</li>
+	<li>333</li>
+</ul>
+
+<!-- 放代码 -->
+<p>
+	For example 
+	<code>#include&lt;stdio.h&gt;</code>
+	<code>print("Hello world!");</code>
+</p>
+
+<pre>
+	<!-- 代码块 -->
+	print('Hello World!')
+	a = [1,2,3,4,5]
+	for x in a:
+		print(x)
+</pre>
+
+<br>
+<p>---------------------------------------分割线----------------------------------------</p>
+<br>
+
+
+<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+<div class="table-responsive">
+	<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+	<table class="table table-bordered table-striped table-hover">
+		<thead>
+			<tr>
+				<th>#</th>
+				<th>姓名</th>
+				<th>爱好</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+
+		<tbody>
+			<tr>
+				<td>1</td>
+				<td>铁锤</td>
+				<td>发憨憨</td>
+				<td><button class="btn btn-danger">删除</button> <button class="btn btn-primary">编辑</button></td>
+			</tr>
+
+			<tr>
+				<td>2</td>
+				<td>铁杵</td>
+				<td>抽烟 烫头</td>
+				<td><button class="btn btn-danger">删除</button> <button class="btn btn-primary">编辑</button></td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<!-- 准备环境 -->
+<script type="jquery-3.2.1.min.js"></script>
+<script type="../bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+
+</body>
+</html>

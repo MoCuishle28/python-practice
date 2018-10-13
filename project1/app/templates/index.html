@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <meta charset="utf-8">
+    <title>首页</title>
+    <style type="text/css">
+    	.mt{
+    		margin-top: 38px;
+    	}
+    </style>
+{% endblock %}
+
+{% block content %}
+<!-- 导入头部导航条 -->
+{{super()}}
+
+<!-- 主题部分 -->
+<div class="container">
+
+	{% for book in bookList %}
+
+	{% if loop.index%2 == 0 %}
+	<div class="row">
+	{% endif %}
+
+		<div class="col-md-2 mt">
+			<!-- 点击进入详情页 -->
+			<a href="#" class="click"><img src="{{book['image']}}" class="book"></a>
+		</div>
+		<div class="col-md-4 mt">
+			<p class="f">作者:{{book['author']}}</p>
+			<span class="f">出版社:{{book['publisher']}}</span>
+			<p class="f">简介:
+				{% set cnt = 1 %}
+				{% for c in book['summary']%}
+					{% if cnt%5 == 8 %}
+						<br>
+					{% endif %}
+					{{c}}
+					{% set cnt = cnt + 1 %}
+				{% endfor %}
+			</p>
+		</div>
+
+	{% if loop.index%2 == 0 %}
+	</div>
+	{% endif %}
+
+	{% endfor%}
+</div>
+
+<div class="container" align="center">
+	<nav aria-label="Page navigation">
+        <ul class="pagination">
+     		<li>
+            	<a href="#" aria-label="Previous">
+             	<span aria-hidden="true">&laquo;</span>
+            	</a>
+          	</li>
+	        <li><a href="#">1</a></li>
+	        <li><a href="#">2</a></li>
+	        <li><a href="#">3</a></li>
+	        <li><a href="#">4</a></li>
+	        <li><a href="#">5</a></li>
+	        <li>
+            <a href="#" aria-label="Next">
+            	<span aria-hidden="true">&raquo;</span>
+            </a>
+          	</li>
+        </ul>
+    </nav> 
+</div>   
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}
