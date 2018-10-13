@@ -26,20 +26,16 @@
 
 		<div class="col-md-2 mt">
 			<!-- 点击进入详情页 -->
-			<a href="#" class="click"><img src="{{book['image']}}" class="book"></a>
+			<a href="{{url_for('web.detil',book_id=book['id'])}}" class="click">
+				<img src="{{book['image']}}" class="book">
+			</a>
 		</div>
 		<div class="col-md-4 mt">
-			<p class="f">作者:{{book['author']}}</p>
+			<span>书名:{{book['title']}}</span>
+			<p>作者:{{book['author']}}</p>
 			<span class="f">出版社:{{book['publisher']}}</span>
 			<p class="f">简介:
-				{% set cnt = 1 %}
-				{% for c in book['summary']%}
-					{% if cnt%5 == 8 %}
-						<br>
-					{% endif %}
-					{{c}}
-					{% set cnt = cnt + 1 %}
-				{% endfor %}
+				{{book['summary']}}
 			</p>
 		</div>
 

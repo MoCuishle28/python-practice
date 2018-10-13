@@ -8,6 +8,26 @@
     	.mt{
     		margin-top: 38px;
     	}
+    	img:hover{
+    		transform: scale(1.0);
+    	}
+      .book{
+        width: 150px;
+        height: 210px;
+      }
+      .row{
+      	position: relative;
+
+      }
+      .left{
+      	position: absolute;
+      	left: 100px;
+      }
+      .right{
+      	position: absolute;
+      	left: 500px;
+      	margin-top: 80px;
+      }
     </style>
 {% endblock %}
 
@@ -15,6 +35,22 @@
 <!-- 导入头部导航条 -->
 {{super()}}
 
+<div class="container">
+		<div class="row">
+			<div class="col-md-6 mt left">
+				<img src="{{book['image']}}" class="book">
+			</div>
+
+			<div class="col-md-6 mt right">
+				<span>书名:{{book['title']}}</span>
+				<p>作者:{{book['author']}}</p>
+				<span class="f">出版社:{{book['publisher']}}</span>
+				<p class="f">简介:
+					{{book['summary']}}
+				</p>
+			</div>
+	</div>
+</div>
 
 {% endblock %}
 

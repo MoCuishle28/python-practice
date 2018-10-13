@@ -2,6 +2,9 @@ from flask import render_template, request, url_for, session, redirect
 from . import web
 from app.models.book import Book
 from app.models.user import User
+from app.models.gift import Gift
+from app.models.wish import Wish
+
 
 
 @web.route('/')
@@ -36,6 +39,11 @@ def login():
 	return render_template('login.html', msg = msg)
 
 
-@web.route('/detil')
-def detil():
-	pass
+@web.route('/detil/<book_id>')
+def detil(book_id):
+	book = Book.find_all(id=book_id)	# 返回一个列表 每个元素是字典
+	if book:
+		giftList = Gift.get_gift(book_id)
+		wishList = Wish.get_wish(book_id)
+	book = book[0]
+	return render_template('detil.html', book = book)

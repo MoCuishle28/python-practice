@@ -17,7 +17,7 @@ class Gift():
 		'''
 		查询某本书相关的礼物
 		'''
-		sql = 'select * from gitf where book_id=%s;'
+		sql = 'select * from gift where book_id=%s;'
 		conn = pool.connection()
 		cur = conn.cursor()
 		cur.execute(sql,(book_id,))
