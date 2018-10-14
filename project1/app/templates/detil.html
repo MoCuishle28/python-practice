@@ -8,6 +8,9 @@
     	.mt{
     		margin-top: 38px;
     	}
+    	.mt-50{
+    		margin-top: 80px;	
+    	}
     	img:hover{
     		transform: scale(1.0);
     	}
@@ -36,21 +39,104 @@
 {{super()}}
 
 <div class="container">
-		<div class="row">
-			<div class="col-md-6 mt left">
-				<img src="{{book['image']}}" class="book">
-			</div>
+	<div class="row">
+		<div class="col-md-6 mt">
+			<img src="{{book['image']}}" class="book">
+		</div>
 
-			<div class="col-md-6 mt right">
-				<span>书名:{{book['title']}}</span>
-				<p>作者:{{book['author']}}</p>
-				<span class="f">出版社:{{book['publisher']}}</span>
-				<p class="f">简介:
-					{{book['summary']}}
-				</p>
-			</div>
+		<div class="col-md-6 mt">
+			<span>书名:{{book['title']}}</span>
+			<p>作者:{{book['author']}}</p>
+			<span class="f">出版社:{{book['publisher']}}</span>
+			<p class="f">简介:
+				{{book['summary']}}
+			</p>
+			{% if username %}
+			<form action="{{url_for('web.detil', book_id=book['id'])}}", method="post">
+				<button class="btn btn-primary" name="give_book">赠送</button>
+				<button class="btn btn-primary" name="wish_book">添加到心愿</button>
+				<p style="color: red">{{message}}</p>
+			</form>
+			{% endif %}
+		</div>
 	</div>
+
+	<div class="row mt-50">
+		<div class="bs-example" data-example-id="contextual-panels">
+			<!-- 蓝色的 -->
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h3 class="panel-title">礼物清单</h3>
+				</div>
+		
+				<div class="panel-body">
+								<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+					<div class="table-responsive">
+						<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+						<table class="table table-bordered table-striped table-hover">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>赠送人</th>
+									<th>操作</th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{% for gift in giftList %}
+									<tr>
+										<td>{{loop.index}}</td>
+										<td>{{gift.get('nickname')}}</td>
+										<td><button class="btn btn-primary">请求</button></td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="row mt-50">
+		<div class="bs-example" data-example-id="contextual-panels">
+			<!-- 蓝色的 -->
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h3 class="panel-title">心愿清单</h3>
+				</div>
+		
+				<div class="panel-body">
+					<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+					<div class="table-responsive">
+						<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+						<table class="table table-bordered table-striped table-hover">
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>心愿人</th>
+									<th>操作</th>
+								</tr>
+							</thead>
+
+							<tbody>
+								{% for wish in wishList %}
+									<tr>
+										<td>{{loop.index}}</td>
+										<td>{{wish.get('nickname')}}</td>
+										<td><button class="btn btn-primary">赠送</button></td>
+									</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </div>
+
 
 {% endblock %}
 

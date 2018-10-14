@@ -12,15 +12,38 @@ class Gift():
 	launched	是否已经完成赠送
 	'''
 
+	def __init__(self, book_id, user_id, launched):
+		self.book_id = book_id
+		self.user_id = user_id
+		self.launched = launched
+
+
+	def insert(self):
+		ret = True
+		try:
+			sql = 'insert into gift (`book_id`, `user_id`, `launched`) values(%s, %s, %s)'
+			conn = pool.connection()
+			cur = conn.cursor()
+			cur.execute(sql, (self.book_id, self.user_id, self.launched))
+			conn.commit()
+		except:
+			print('Error')
+			ret = False
+			conn.rollback()	# 一条sql失败 则全部都不会提交
+		finally:
+			cur.close()
+			conn.close()
+		return ret
+
 	@classmethod
-	def get_gift(cls,book_id):
+	def get_giftInfo(cls,book_id):
 		'''
 		查询某本书相关的礼物
 		'''
-		sql = 'select * from gift where book_id=%s;'
+		sql = 'select user_id,nickname,launched from user u,gift g where g.book_id=%s and g.user_id=u.id and launched=%s;'
 		conn = pool.connection()
 		cur = conn.cursor()
-		cur.execute(sql,(book_id,))
+		cur.execute(sql,(book_id,'0', ))
 		# 拿结果 直接拿不知道是什么? 是字典?
 		# ret = cur.fetchall()
 		# 这条怎么理解?  解包?
@@ -28,7 +51,7 @@ class Gift():
 				for row in cur.fetchall() ]		# 多条数据 用list
 		cur.close()
 		conn.close()
-		return ret
+		return ret 	# 返回列表 每个元素为一个字典
 
 
 	@classmethod

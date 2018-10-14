@@ -8,7 +8,47 @@
 {% block content %}
 
 <div align="center">
-	<h1>写一个注册表格</h1>
+	<h3>注册</h3>
+</div>
+
+<div class="container" align="center">
+	<!-- 前后端有数据交互时用form -->
+	<!-- form 相当于一个容器 用户将数据通过输入框之类的放入容器里 form再提交到服务器 -->
+	<!-- action为提交给后台的视图函数 或 网址-->
+	<!--  method规定请求的类型(post/get)默认是get   搜索/访问...用get  提交密码/地址...用post -->
+	<!-- enctype="multipart/form-data" 有文件时用这个 -->
+	<form action="{{url_for('web.register')}}" method="post">
+		<!-- name为提交后 后台拿到数据的 key -->
+		<p>
+			<label>账号<input type="text" name="username"></label>
+		</p>
+
+		<p>
+			<label>密码<input type="password" name="password"></label>
+		</p>
+
+		<p>
+			<label>昵称<input type="text" name="nickname"></label>
+		</p>
+
+		<p>
+			<label>电话<input type="text" name="phone"></label>
+		</p>
+
+		<p>
+			<label>邮箱<input type="email" name="email"></label>
+		</p>
+
+		<p>
+			<!-- 大文本区 placeholder默认显示(不是值) -->
+			<textarea cols="30" rows="10" name="address" placeholder="请填写邮寄地址..."></textarea>
+		</p>
+
+		<!-- value 显示内容 type="submit"会把form的内容提交到后台 -->
+		<input type="submit" value="注册">
+		<!-- 填错时能快速回复原来的样子 -->
+		<input type="reset" name="reset">
+	</form>
 </div>
 
 {% endblock %}
