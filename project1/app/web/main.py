@@ -111,8 +111,6 @@ def detil(book_id):
 	return render_template('detil.html', book=book, username=username, giftList=giftList, wishList=wishList, message=message)
 
 
-
-
 def is_your_gitf(giftList, user_id):
 	for gift in giftList:
 		if gift.get('user_id') == user_id:
@@ -126,3 +124,27 @@ def is_your_wish(wishList, user_id):
 		if wish.get('user_id') == user_id:
 			return False
 	return True
+
+
+@web.route('/giftList')
+def giftList():
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	giftList = Gift.get_user_gift_by_username(username)
+
+	for x in giftList:
+		print(x)
+
+	return render_template('myList.html', username=username, myList=giftList)
+
+
+@web.route('/wishList')
+def wishList():
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	wishList = Wish.get_user_wish_by_username(username)
+	for i in wishList:
+		print(i)
+	return render_template('myList.html', username=username, myList=wishList)

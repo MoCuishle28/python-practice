@@ -55,14 +55,14 @@ class Gift():
 
 
 	@classmethod
-	def get_user_gift(cls,user_id):
+	def get_user_gift_by_username(cls,username):
 		'''
 		查询某用户相关的礼物
 		'''
-		sql = 'select * from gitf where user_id=%s;'
+		sql = 'select isbn,title,author,launched from gift,user u,book b where username=%s and user_id=u.id and b.id=book_id;'
 		conn = pool.connection()
 		cur = conn.cursor()
-		cur.execute(sql,(user_id,))
+		cur.execute(sql,(username,))
 		# 拿结果 直接拿不知道是什么? 是字典?
 		# ret = cur.fetchall()
 		# 这条怎么理解?  解包?

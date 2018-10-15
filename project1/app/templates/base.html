@@ -65,16 +65,19 @@
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav">
-          <li class="active"><a href="#">Zonda <span class="sr-only">(current)</span></a></li>
+          <li class="active"><a href="{{url_for('web.index')}}">Zonda</a></li>
+          {% if username %}
+          <li class="active"><a href="{{url_for('web.giftList')}}">你赠送的礼物</a></li>
+          <li class="active"><a href="{{url_for('web.wishList')}}">你的心愿</a></li>
+          {% endif %}
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
         <!-- 若已经登录 应该显示登录信息!!!!!!! -->
-        
         {% if username %}
-        <li><a href="#">{{username}}</a></li>
+          <li><a href="#">{{username}}</a></li>
         {% else %}
-        <li><a href="{{url_for('web.login')}}">登录/注册</a></li>
+          <li><a href="{{url_for('web.login')}}">登录/注册</a></li>
         {% endif %}
       </ul>
     </div>

@@ -57,14 +57,14 @@ class Wish():
 
 
 	@classmethod
-	def get_user_wish(cls,user_id):
+	def get_user_wish_by_username(cls,username):
 		'''
 		查询某位用户相关的心愿
 		'''
-		sql = 'select * from wish where user_id=%s;'
+		sql = 'select isbn,title,author,launched from wish,user u,book b where username=%s and user_id=u.id and b.id=book_id;'
 		conn = pool.connection()
 		cur = conn.cursor()
-		cur.execute(sql,(user_id,))
+		cur.execute(sql,(username,))
 		# 拿结果 直接拿不知道是什么? 是字典?
 		# ret = cur.fetchall()
 		# 这条怎么理解?  解包?
