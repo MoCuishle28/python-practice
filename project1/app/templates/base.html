@@ -75,7 +75,7 @@
       <ul class="nav navbar-nav navbar-right">
         <!-- 若已经登录 应该显示登录信息!!!!!!! -->
         {% if username %}
-          <li><a href="#">{{username}}</a></li>
+          <li><a href="{{url_for('web.personal')}}">{{username}}</a></li>
         {% else %}
           <li><a href="{{url_for('web.login')}}">登录/注册</a></li>
         {% endif %}

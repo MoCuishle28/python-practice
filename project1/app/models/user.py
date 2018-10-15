@@ -1,5 +1,5 @@
 from .base import pool
-
+import MySQLdb
 
 
 class User(object):
@@ -81,3 +81,15 @@ class User(object):
 		conn.close()
 		# 返回的是元组
 		return ret
+
+
+	@classmethod
+	def find_user_by_username(cls, username):
+		sql = 'select * from user where username=%s;'
+		conn = pool.connection()
+		cur = conn.cursor(cursorclass = MySQLdb.cursors.DictCursor)	# 设置返回字典
+		cur.execute(sql, (username,))
+		ret = cur.fetchall()	# 得到一个元组 每个元素为一个字典
+		cur.close()
+		conn.close()
+		return ret		

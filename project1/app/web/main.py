@@ -131,11 +131,7 @@ def giftList():
 	username = session.get('username')
 	if not username:
 		return redirect(url_for('web.login'))
-	giftList = Gift.get_user_gift_by_username(username)
-
-	for x in giftList:
-		print(x)
-
+	giftList = Gift.get_user_gift_by_username(username)		# 字典
 	return render_template('myList.html', username=username, myList=giftList)
 
 
@@ -144,7 +140,39 @@ def wishList():
 	username = session.get('username')
 	if not username:
 		return redirect(url_for('web.login'))
-	wishList = Wish.get_user_wish_by_username(username)
-	for i in wishList:
-		print(i)
+	wishList = Wish.get_user_wish_by_username(username)		# 字典
 	return render_template('myList.html', username=username, myList=wishList)
+
+
+@web.route('/personal')
+def personal():
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	# TODO 提交修改数据
+	user = User.find_user_by_username(username)[0]
+	print(user)
+	return render_template('personal.html', username=username, user=user)
+
+
+@web.route('/changeInfo', methods=['POST', 'GET'])
+def changeInfo():
+	# TODO
+	print(request.form)
+	return redirect(url_for('web.index'))
+
+
+@web.route('/exit')
+def exit():
+	session['username'] = None
+	return redirect(url_for('web.index'))
+
+
+@web.route('/handleGift')
+def handleGift():
+	pass
+
+
+@web.route('/handleWish')
+def handleWish():
+	pass

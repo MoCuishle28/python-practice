@@ -15,13 +15,13 @@
 			<form action="/login" method="post">
 			 	<div class="form-group" style="width: 300px">
 			    	<label for="user_name">用户名</label>
-			    	<input name="username" type="text" class="form-control " id="user_name" placeholder="Username" aria-describedby="helpBlock">
+			    	<input name="username" type="text" class="form-control " id="user_name" placeholder="Username" aria-describedby="helpBlock" value=" ">
 			    	<span id="helpBlock" class="help-block hide">用户名不能为空</span>
 			  	</div>
 
 			  	<div class="form-group" style="width: 300px">
 			    	<label for="password1">密码</label>
-			    	<input name="password" type="password" class="form-control" id="password1" placeholder="Password">
+			    	<input name="password" type="password" class="form-control" id="password1" placeholder="Password" value="">
 			  	</div>
 			  	<!-- btn-block可以将其拉伸至父元素100%的宽度，而且按钮也变为了块级（block）元素 -->
 			  	<button type="submit" class="btn btn-primary btn-block" style="width: 300px">登录</button>
