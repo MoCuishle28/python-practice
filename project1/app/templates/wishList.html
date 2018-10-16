@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+	<title>你的礼物清单</title>
+{% endblock %}
+
+{% block content %}
+{{super()}}
+
+<div class="container">
+
+	<div class="row">
+			<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+			<div class="table-responsive">
+				<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th>ISBN</th>
+							<th>书名</th>
+							<th>作者</th>
+							<th>状态</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+
+					<tbody>
+					{% for x in myList %}
+
+						<tr>
+							<td>{{x.get('isbn')}}</td>
+							<td>{{x.get('title')}}</td>
+							<td>{{x.get('author')}}</td>
+
+							{% if x.get('launched') == '0' %}
+								<td>等待处理</td>
+							{% else %}
+								<td>已处理</td>
+							{% endif %}
+
+							<td>
+								{% if x.get('launched') == '0' %}
+									<a href="{{url_for('web.del_wish', isbn=x.get('isbn'))}}">
+										<button class="btn btn-danger" name="del_item">删除</button>
+									</a>
+								{% else %}
+									<p>已处理</p>
+								{% endif %}
+							</td>
+						</tr>
+					{% endfor %}
+					</tbody>
+				</table>
+			</div>
+
+	</div>
+	
+</div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}

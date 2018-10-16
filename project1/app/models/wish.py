@@ -73,3 +73,21 @@ class Wish():
 		cur.close()
 		conn.close()
 		return ret
+
+
+	@classmethod
+	def delete_by_ISBN(cls, isbn):
+		try:
+			sql = 'delete from wish where book_id=(select id from book where isbn=%s);'
+			conn = pool.connection()
+			cur = conn.cursor(cursorclass = MySQLdb.cursors.DictCursor)	# 设置返回字典
+			cur.execute(sql,(isbn, ))
+			conn.commit()
+			ret = cur.fetchall()	# 得到一个元组 每个元素为一个字典
+		except Exception as e:
+			print('Error',e)
+			conn.rollback()
+		finally:
+			cur.close()
+			conn.close()
+		return ret

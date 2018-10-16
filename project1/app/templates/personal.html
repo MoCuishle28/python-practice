@@ -21,6 +21,7 @@
 	<!-- enctype="multipart/form-data" 有文件时用这个 -->
 	<form action="{{url_for('web.changeInfo')}}" method="post">
 		<!-- name为提交后 后台拿到数据的 key -->
+		<input type="hidden" name="id" readonly="readonly" value="{{user.get('id')}}">
 		<p>
 			<label>账号<input type="text" name="username" value="{{user.get('username')}}"></label>
 		</p>
@@ -43,7 +44,7 @@
 
 		<p>
 			<!-- 大文本区 placeholder默认显示(不是值) -->
-			<textarea cols="30" rows="10" name="address" placeholder="{{user.get('address')}}"></textarea>
+			<textarea cols="30" rows="10" name="address">{{user.get('address')}}</textarea>
 		</p>
 
 		<!-- value 显示内容 type="submit"会把form的内容提交到后台 -->

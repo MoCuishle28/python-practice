@@ -52,7 +52,7 @@
 				{{book['summary']}}
 			</p>
 			{% if username %}
-			<form action="{{url_for('web.detil', book_id=book['id'])}}", method="post">
+			<form action="{{url_for('web.detil', book_id=book['id'])}}" method="post">
 				<button class="btn btn-primary" name="give_book">赠送</button>
 				<button class="btn btn-primary" name="wish_book">添加到心愿</button>
 				<p style="color: red">{{message}}</p>
@@ -87,7 +87,11 @@
 									<tr>
 										<td>{{loop.index}}</td>
 										<td>{{gift.get('nickname')}}</td>
-										<td><button class="btn btn-primary">请求</button></td>
+										<td>
+											<form action="#" method="post">
+												<button class="btn btn-primary" name="please">请求</button>
+											</form>
+										</td>
 									</tr>
 								{% endfor %}
 							</tbody>
@@ -124,7 +128,11 @@
 									<tr>
 										<td>{{loop.index}}</td>
 										<td>{{wish.get('nickname')}}</td>
-										<td><button class="btn btn-primary">赠送</button></td>
+										<td>
+											<form action="#" method="post">
+												<button class="btn btn-primary" name="give">赠送</button>	
+											</form>
+										</td>
 									</tr>
 								{% endfor %}
 							</tbody>

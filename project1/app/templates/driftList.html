@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+	<title>你的礼物清单</title>
+{% endblock %}
+
+{% block content %}
+{{super()}}
+
+<div class="container">
+
+	<div class="row">
+		<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+		<div class="table-responsive">
+			<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+			<h1 align="center">心愿drift</h1>
+			<table class="table table-bordered table-striped table-hover">
+				<thead>
+					<tr>
+						<th>书名</th>
+						<th>赠予人</th>
+						<th>状态</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+
+				<tbody>
+				{% for x in myList %}
+
+					<tr>
+						<td>{{x.get('title')}}</td>
+						<td>{{x.get('author')}}</td>
+
+						{% if x.get('launched') == '0' %}
+							<td>未送出</td>
+						{% else %}
+							<td>已送出</td>
+						{% endif %}
+
+						<td>
+							{% if x.get('launched') == '0' %}
+								<a href="#">
+									<button class="btn btn-danger" name="del_item">确认收货</button>	
+								</a>
+							{% else %}
+								<p>等待收货</p>
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	
+
+		<div class="row">
+		<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
+		<div class="table-responsive">
+			<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+			<h1 align="center">礼物drift</h1>
+			<table class="table table-bordered table-striped table-hover">
+				<thead>
+					<tr>
+						<th>书名</th>
+						<th>赠予人</th>
+						<th>状态</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+
+				<tbody>
+				{% for x in myList %}
+
+					<tr>
+						<td>{{x.get('title')}}</td>
+						<td>{{x.get('author')}}</td>
+
+						{% if x.get('launched') == '0' %}
+							<td>未送出</td>
+						{% else %}
+							<td>已送出</td>
+						{% endif %}
+
+						<td>
+							{% if x.get('launched') == '0' %}
+								<a href="#">
+									<button class="btn btn-danger" name="del_item">确认收货</button>	
+								</a>
+							{% else %}
+								<p>等待收货</p>
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+</div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}

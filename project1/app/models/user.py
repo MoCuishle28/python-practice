@@ -13,13 +13,14 @@ class User(object):
 	email
 	'''
 
-	def __init__(self, username, password, nickname, address, phone, email):
+	def __init__(self, username, password, nickname, address, phone, email, _id):
 		self.username = username
 		self.password = password
 		self.nickname = nickname
 		self.address = address
 		self.phone = phone
 		self.email = email
+		self.id = int(_id)
 
 
 	def insert(self):
@@ -32,6 +33,24 @@ class User(object):
 			conn.commit()
 		except Exception as e:
 			print('User Insert Error', e)
+			ret = False
+			conn.rollback()	# 一条sql失败 则全部都不会提交
+		finally:
+			cur.close()
+			conn.close()
+		return ret
+
+
+	def update(self):
+		ret = True
+		try:
+			sql = 'update user set username=%s,password=%s,nickname=%s,address=%s,phone=%s,email=%s where id=%s;'
+			conn = pool.connection()
+			cur = conn.cursor()
+			cur.execute(sql, (self.username,self.password,self.nickname,self.address,self.phone,self.email, self.id))
+			conn.commit()
+		except Exception as e:
+			print('User update Error', e)
 			ret = False
 			conn.rollback()	# 一条sql失败 则全部都不会提交
 		finally:
@@ -92,4 +111,17 @@ class User(object):
 		ret = cur.fetchall()	# 得到一个元组 每个元素为一个字典
 		cur.close()
 		conn.close()
-		return ret		
+		return ret
+
+
+
+	@classmethod
+	def find_user_by_ID(cls, _id):
+		sql = 'select * from user where id=%s;'
+		conn = pool.connection()
+		cur = conn.cursor(cursorclass = MySQLdb.cursors.DictCursor)	# 设置返回字典
+		cur.execute(sql, (_id,))
+		ret = cur.fetchall()	# 得到一个元组 每个元素为一个字典
+		cur.close()
+		conn.close()
+		return ret

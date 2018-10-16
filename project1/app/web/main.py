@@ -132,7 +132,7 @@ def giftList():
 	if not username:
 		return redirect(url_for('web.login'))
 	giftList = Gift.get_user_gift_by_username(username)		# 字典
-	return render_template('myList.html', username=username, myList=giftList)
+	return render_template('giftList.html', username=username, myList=giftList)
 
 
 @web.route('/wishList')
@@ -141,7 +141,41 @@ def wishList():
 	if not username:
 		return redirect(url_for('web.login'))
 	wishList = Wish.get_user_wish_by_username(username)		# 字典
-	return render_template('myList.html', username=username, myList=wishList)
+	return render_template('wishList.html', username=username, myList=wishList)
+
+
+@web.route('/driftList')
+def driftList():
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	# 找到赠予你的书
+	# 找到你要赠予别人的书
+	return render_template('driftList.html', username=username)
+
+
+@web.route('/handleDrift')
+def handleDrift():
+	# 处理交易清单 TODO
+	pass
+
+
+@web.route('/del_gift/<isbn>')
+def del_gift(isbn):
+	username = session.get("username")
+	if not username:
+		redirect(url_for('web.login'))
+	retDel = Gift.delete_by_ISBN(isbn)
+	return redirect(url_for('web.giftList'))
+
+
+@web.route('/del_wish/<isbn>')
+def del_wish(isbn):
+	username = session.get("username")
+	if not username:
+		redirect(url_for('web.login'))
+	retDel = Wish.delete_by_ISBN(isbn)
+	return redirect(url_for('web.wishList'))
 
 
 @web.route('/personal')
@@ -149,7 +183,6 @@ def personal():
 	username = session.get('username')
 	if not username:
 		return redirect(url_for('web.login'))
-	# TODO 提交修改数据
 	user = User.find_user_by_username(username)[0]
 	print(user)
 	return render_template('personal.html', username=username, user=user)
@@ -157,22 +190,16 @@ def personal():
 
 @web.route('/changeInfo', methods=['POST', 'GET'])
 def changeInfo():
-	# TODO
-	print(request.form)
+	# for k,v in request.form.items():
+	# 	user
+	user = User(request.form.get('username'), request.form.get('password'), request.form.get('nickname'), 
+		request.form.get('address'), request.form.get('phone'), request.form.get('email'), request.form.get('id'))
+	print(user.update())
 	return redirect(url_for('web.index'))
 
 
 @web.route('/exit')
 def exit():
+	# 退出
 	session['username'] = None
 	return redirect(url_for('web.index'))
-
-
-@web.route('/handleGift')
-def handleGift():
-	pass
-
-
-@web.route('/handleWish')
-def handleWish():
-	pass
