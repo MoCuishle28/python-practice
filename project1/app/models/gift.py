@@ -110,3 +110,15 @@ class Gift():
 			cur.close()
 			conn.close()
 		return ret
+
+
+	@classmethod
+	def valid_gift_exists(cls, book_id, user_id):
+		sql = 'select * from gift where book_id=%s and user_id=%s;'
+		conn = pool.connection()
+		cur = conn.cursor()
+		cur.execute(sql,(book_id, user_id ))
+		ret = cur.fetchone()
+		cur.close()
+		conn.close()
+		return ret

@@ -215,6 +215,10 @@ def giveBook():
 	if Drift.valid_drift(user.get('id'), request.form.get('rec_id'), request.form.get('book_id')):
 		return redirect(url_for('web.index'))
 	elif drift.insert():
+		if not Gift.valid_gift_exists(drift.book_id, drift.giver_id):
+			# 插入
+			gift = Gift(drift.book_id, drift.giver_id, 0)
+			print(gift.insert())
 		print(Wish.update('launched', 1, 'user_id', request.form.get('rec_id'), request.form.get('book_id')))
 		print(Gift.update(user.get('id'), 'launched', '1', request.form.get('book_id')))
 	return redirect(url_for('web.driftList'))
