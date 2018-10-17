@@ -38,6 +38,26 @@ class Wish():
 
 
 	@classmethod
+	def update(cls, target_item, new_value, condition_item, condition_value, book_id):
+		ret = True
+		try:
+			sql = 'update wish set {} = %s where {} = %s and book_id={};'.format(target_item, condition_item, book_id)
+			print(sql)
+			conn = pool.connection()
+			cur = conn.cursor()
+			cur.execute(sql, (new_value, condition_value, ))
+			conn.commit()
+		except Exception as e:
+			print('Wish Update Error', e)
+			ret = False
+			conn.rollback()	# 一条sql失败 则全部都不会提交
+		finally:
+			cur.close()
+			conn.close()
+		return ret		
+
+
+	@classmethod
 	def get_wishInfo(cls,book_id):
 		'''
 		查询某本书相关的心愿
@@ -90,4 +110,16 @@ class Wish():
 		finally:
 			cur.close()
 			conn.close()
+		return ret
+
+
+	@classmethod
+	def valid_wish_exists(cls, book_id, user_id):
+		sql = 'select * from wish where book_id=%s and user_id=%s;'
+		conn = pool.connection()
+		cur = conn.cursor()
+		cur.execute(sql,(book_id, user_id ))
+		ret = cur.fetchone()
+		cur.close()
+		conn.close()
 		return ret

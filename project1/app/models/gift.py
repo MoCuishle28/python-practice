@@ -35,6 +35,27 @@ class Gift():
 			conn.close()
 		return ret
 
+
+	@classmethod
+	def update(cls, u_id, item, new_value, book_id):
+		ret = True
+		try:
+			sql = 'update gift set {} = %s where user_id=%s and book_id={};'.format(item, book_id)
+			print(sql)
+			conn = pool.connection()
+			cur = conn.cursor()
+			cur.execute(sql, (new_value, u_id, ))
+			conn.commit()
+		except Exception as e:
+			print('Gift Update Error', e)
+			ret = False
+			conn.rollback()	# 一条sql失败 则全部都不会提交
+		finally:
+			cur.close()
+			conn.close()
+		return ret
+
+
 	@classmethod
 	def get_giftInfo(cls,book_id):
 		'''

@@ -14,35 +14,41 @@
 		<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
 		<div class="table-responsive">
 			<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
-			<h1 align="center">心愿drift</h1>
+			<h1 align="center">我的礼物Drift</h1>
 			<table class="table table-bordered table-striped table-hover">
 				<thead>
 					<tr>
 						<th>书名</th>
-						<th>赠予人</th>
+						<th>接收人</th>
 						<th>状态</th>
 						<th>操作</th>
 					</tr>
 				</thead>
 
 				<tbody>
-				{% for x in myList %}
-
+				{% for x in giver_list %}
 					<tr>
 						<td>{{x.get('title')}}</td>
-						<td>{{x.get('author')}}</td>
-
-						{% if x.get('launched') == '0' %}
-							<td>未送出</td>
-						{% else %}
-							<td>已送出</td>
-						{% endif %}
-
+						<td>{{x.get('nickname')}}</td>
+						<td>{{x.get('status')}}</td>
 						<td>
-							{% if x.get('launched') == '0' %}
-								<a href="#">
-									<button class="btn btn-danger" name="del_item">确认收货</button>	
-								</a>
+							{% if x.get('status') == '已签收' %}
+								<form action="#" method="post">
+									<button type="submit" class="btn btn-danger" name="ok">
+										完成
+									</button>	
+								</form>
+							{% elif x.get('status')=='待处理' %}
+								<form action="{{url_for('web.ok')}}" method="post">
+									<input type="hidden" name="book_id" readonly="readonly" value="{{x.get('book_id')}}">
+									<input type="hidden" name="drift_id" readonly="readonly" value="{{x.get('id')}}">
+									<button type="submit" class="btn btn-primary" name="ok">
+										同意Drift
+									</button>
+									<button type="submit" class="btn btn-danger" name="no">
+										拒绝Drift
+									</button>
+								</form>
 							{% else %}
 								<p>等待收货</p>
 							{% endif %}
@@ -59,7 +65,7 @@
 		<!-- table-responsive响应式表格 内容放不下时会允许拖 -->
 		<div class="table-responsive">
 			<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
-			<h1 align="center">礼物drift</h1>
+			<h1 align="center">我的心愿Drift</h1>
 			<table class="table table-bordered table-striped table-hover">
 				<thead>
 					<tr>
@@ -71,25 +77,24 @@
 				</thead>
 
 				<tbody>
-				{% for x in myList %}
+				{% for x in recipient_list %}
 
 					<tr>
 						<td>{{x.get('title')}}</td>
-						<td>{{x.get('author')}}</td>
-
-						{% if x.get('launched') == '0' %}
-							<td>未送出</td>
-						{% else %}
-							<td>已送出</td>
-						{% endif %}
+						<td>{{x.get('nickname')}}</td>
+						<td>{{x.get('status')}}</td>
 
 						<td>
-							{% if x.get('launched') == '0' %}
-								<a href="#">
-									<button class="btn btn-danger" name="del_item">确认收货</button>	
-								</a>
+							{% if x.get('status') == '已签收' %}
+								<form action="#" method="post">
+									<button type="submit" class="btn btn-danger" name="confirm">
+										确认收货
+									</button>	
+								</form>
+							{% elif x.get('status') == '已拒绝' %}
+								<p>{{x.get('status')}}</p>
 							{% else %}
-								<p>等待收货</p>
+								<p>{{x.get('status')}}</p>
 							{% endif %}
 						</td>
 					</tr>

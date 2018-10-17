@@ -34,9 +34,9 @@
 							<td>{{x.get('author')}}</td>
 
 							{% if x.get('launched') == '0' %}
-								<td>等待处理</td>
+								<td>等待</td>
 							{% else %}
-								<td>已处理</td>
+								<td>已发送请求</td>
 							{% endif %}
 
 							<td>
@@ -45,7 +45,7 @@
 										<button class="btn btn-danger" name="del_item">删除</button>
 									</a>
 								{% else %}
-									<p>已处理</p>
+									<p>已发送请求</p>
 								{% endif %}
 							</td>
 						</tr>

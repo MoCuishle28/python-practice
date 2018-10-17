@@ -4,7 +4,7 @@ from app.models.book import Book
 from app.models.user import User
 from app.models.gift import Gift
 from app.models.wish import Wish
-
+from app.models.drift import Drift
 
 
 @web.route('/')
@@ -149,15 +149,75 @@ def driftList():
 	username = session.get('username')
 	if not username:
 		return redirect(url_for('web.login'))
-	# 找到赠予你的书
-	# 找到你要赠予别人的书
-	return render_template('driftList.html', username=username)
+	user_id = User.find_oneID_by_username(username)[0]
+	giver_list = Drift.get_giver_drift(user_id)
+	recipient_list = Drift.get_recipient_id_drift(user_id)
+	return render_template('driftList.html', username=username, giver_list=giver_list, recipient_list=recipient_list)
 
 
 @web.route('/handleDrift')
 def handleDrift():
-	# 处理交易清单 TODO
+	# 处理交易清单 确认信息 TODO
 	pass
+
+
+@web.route('/ok', methods=['POST','GET'])
+def ok():
+	# 在drift list 下同意请求
+	print(request.form, 'ok' in request.form)
+	if 'ok' in request.form:
+		username = session.get('username')
+		if not username:
+			return redirect('web.login')
+		print(request.form)
+		if Drift.update(request.form.get('drift_id'), 'status', '待寄出'):
+			uid = User.find_oneID_by_username(username)[0]	# 找到送礼人id
+			print(Gift.update(uid, 'launched', '1', request.form.get('book_id')))
+	else:
+		drift_id = request.form.get('drift_id')
+		drift = Drift.find_drift_by_ID(drift_id)
+		rec_id = drift.get('recipient_id')
+		Wish.update('launched', '0', 'user_id', rec_id, drift.get('book_id'))
+	return redirect(url_for('web.driftList'))
+
+
+@web.route('/requestBook', methods=['POST','GET'])
+def requestBook():
+	# 请求书籍
+	print('========================REQUEST======================')
+	print(request.form)
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	user = User.find_user_by_username(username)[0]	# 接收者
+	drift = Drift(request.form.get('giver_id'), user.get('id'), request.form.get('book_id'), user.get('address'), '待处理')
+	if Drift.valid_drift(request.form.get('giver_id'), user.get('id'), request.form.get('book_id')):
+		return redirect(url_for('web.index'))
+	elif drift.insert():
+		if not Wish.valid_wish_exists(drift.book_id, drift.recipient_id):
+			# 如果还没有wish
+			wish = Wish(drift.book_id, drift.recipient_id, 0)
+			print(wish.insert())
+		print(Wish.update('launched', 1, 'user_id', user.get('id'), request.form.get('book_id')))
+	return redirect(url_for('web.driftList'))
+
+
+@web.route('/giveBook', methods=['POST','GET'])
+def giveBook():
+	# 赠予书籍
+	print('========================GIVE======================')
+	print(request.form)
+	username = session.get('username')
+	if not username:
+		return redirect(url_for('web.login'))
+	user = User.find_user_by_username(username)[0]	# 赠送者
+	drift = Drift(user.get('id'), request.form.get('rec_id'), request.form.get('book_id'), user.get('address'), '待签收')
+	if Drift.valid_drift(user.get('id'), request.form.get('rec_id'), request.form.get('book_id')):
+		return redirect(url_for('web.index'))
+	elif drift.insert():
+		print(Wish.update('launched', 1, 'user_id', request.form.get('rec_id'), request.form.get('book_id')))
+		print(Gift.update(user.get('id'), 'launched', '1', request.form.get('book_id')))
+	return redirect(url_for('web.driftList'))
 
 
 @web.route('/del_gift/<isbn>')
@@ -184,14 +244,12 @@ def personal():
 	if not username:
 		return redirect(url_for('web.login'))
 	user = User.find_user_by_username(username)[0]
-	print(user)
+	# print(user)
 	return render_template('personal.html', username=username, user=user)
 
 
 @web.route('/changeInfo', methods=['POST', 'GET'])
 def changeInfo():
-	# for k,v in request.form.items():
-	# 	user
 	user = User(request.form.get('username'), request.form.get('password'), request.form.get('nickname'), 
 		request.form.get('address'), request.form.get('phone'), request.form.get('email'), request.form.get('id'))
 	print(user.update())

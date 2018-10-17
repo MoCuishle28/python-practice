@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+	<title>Drift信息</title>
+	<style type="text/css">
+		.mt{
+			margin-top: 15px;
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+{{super()}}
+
+<div class="container" align="center">
+	<form action="" method="post">
+		<!-- name为提交后 后台拿到数据的 key -->
+		<input type="hidden" name="id" readonly="readonly" value="">
+		<input type="hidden" name="title" readonly="readonly" value="">
+
+		<p>
+			<label>密码<input type="password" name="password" value="{{user.get('password')}}"></label>
+		</p>
+
+		<p>
+			<label>昵称<input type="text" name="nickname" value="{{user.get('nickname')}}"></label>
+		</p>
+
+		<p>
+			<label>电话<input type="text" name="phone" value="{{user.get('phone')}}"></label>
+		</p>
+
+		<p>
+			<label>邮箱<input type="email" name="email" value="{{user.get('email')}}"></label>
+		</p>
+
+		<p>
+			<!-- 大文本区 placeholder默认显示(不是值) -->
+			<textarea cols="30" rows="10" name="address">{{user.get('address')}}</textarea>
+		</p>
+
+		<!-- value 显示内容 type="submit"会把form的内容提交到后台 -->
+		<input type="submit" value="确定">
+		<!-- 填错时能快速回复原来的样子 -->
+	</form>
+</div>
+
+<div class="container mt" align="center">
+	<a href="{{url_for('web.exit')}}"<button class="btn btn-danger">退出</button>></a>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}

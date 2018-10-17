@@ -88,8 +88,10 @@
 										<td>{{loop.index}}</td>
 										<td>{{gift.get('nickname')}}</td>
 										<td>
-											<form action="#" method="post">
-												<button class="btn btn-primary" name="please">请求</button>
+											<form action="{{url_for('web.requestBook')}}" method="post">
+												<input type="hidden" name="book_id" readonly="readonly" value="{{book.get('id')}}">
+												<input type="hidden" name="giver_id" readonly="readonly" value="{{gift.get('user_id')}}">
+												<button type="submit" class="btn btn-primary" name="please">请求</button>
 											</form>
 										</td>
 									</tr>
@@ -129,7 +131,9 @@
 										<td>{{loop.index}}</td>
 										<td>{{wish.get('nickname')}}</td>
 										<td>
-											<form action="#" method="post">
+											<form action="{{url_for('web.giveBook')}}" method="post">
+												<input type="hidden" name="book_id" readonly="readonly" value="{{book.get('id')}}">
+												<input type="hidden" name="rec_id" readonly="readonly" value="{{wish.get('user_id')}}">
 												<button class="btn btn-primary" name="give">赠送</button>	
 											</form>
 										</td>
