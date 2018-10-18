@@ -165,19 +165,22 @@ def handleDrift():
 def ok():
 	# 在drift list 下同意请求
 	print(request.form, 'ok' in request.form)
-	if 'ok' in request.form:
+	if request.method=='POST':
 		username = session.get('username')
 		if not username:
 			return redirect('web.login')
-		print(request.form)
-		if Drift.update(request.form.get('drift_id'), 'status', '待寄出'):
-			uid = User.find_oneID_by_username(username)[0]	# 找到送礼人id
-			print(Gift.update(uid, 'launched', '1', request.form.get('book_id')))
-	else:
-		drift_id = request.form.get('drift_id')
-		drift = Drift.find_drift_by_ID(drift_id)
-		rec_id = drift.get('recipient_id')
-		Wish.update('launched', '0', 'user_id', rec_id, drift.get('book_id'))
+		uid = User.find_oneID_by_username(username)[0]	# 找到送礼人id
+		if 'ok' in request.form:
+			print(request.form)
+			if Drift.update(request.form.get('drift_id'), 'status', '待寄出'):
+				print(Gift.update(uid, 'launched', '1', request.form.get('book_id')))
+		else:
+			drift_id = request.form.get('drift_id')
+			drift = Drift.find_drift_by_ID(drift_id)
+			rec_id = drift.get('recipient_id')
+			Wish.update('launched', '0', 'user_id', rec_id, drift.get('book_id'))
+			# Gift.update(uid, 'launched', '0', request.form.get('book_id'))
+			Drift.update(drift_id, 'status', '已拒绝')
 	return redirect(url_for('web.driftList'))
 
 

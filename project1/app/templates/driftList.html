@@ -21,6 +21,7 @@
 						<th>书名</th>
 						<th>接收人</th>
 						<th>状态</th>
+						<th>地址</th>
 						<th>操作</th>
 					</tr>
 				</thead>
@@ -31,6 +32,7 @@
 						<td>{{x.get('title')}}</td>
 						<td>{{x.get('nickname')}}</td>
 						<td>{{x.get('status')}}</td>
+						<td>{{x.get('address')}}</td>
 						<td>
 							{% if x.get('status') == '已签收' %}
 								<form action="#" method="post">
@@ -49,6 +51,8 @@
 										拒绝Drift
 									</button>
 								</form>
+							{% elif x.get('status') == '已拒绝' %}
+								<p>{{x.get('status')}}</p>
 							{% else %}
 								<p>等待收货</p>
 							{% endif %}
@@ -72,6 +76,7 @@
 						<th>书名</th>
 						<th>赠予人</th>
 						<th>状态</th>
+						<th>地点</th>
 						<th>操作</th>
 					</tr>
 				</thead>
@@ -83,7 +88,7 @@
 						<td>{{x.get('title')}}</td>
 						<td>{{x.get('nickname')}}</td>
 						<td>{{x.get('status')}}</td>
-
+						<td>{{x.get('address')}}</td>
 						<td>
 							{% if x.get('status') == '已签收' %}
 								<form action="#" method="post">

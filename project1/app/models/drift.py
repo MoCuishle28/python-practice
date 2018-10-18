@@ -114,7 +114,7 @@ class Drift(object):
 		'''
 		查询某位用户赠予别人的礼物
 		'''
-		sql = 'select d.id,b.id as book_id,title,u.nickname,status from drift d,user u,book b where giver_id=%s and u.id=recipient_id and b.id=book_id;'
+		sql = 'select d.id,b.id as book_id,title,u.nickname,status,address from drift d,user u,book b where giver_id=%s and u.id=recipient_id and b.id=book_id;'
 		conn = pool.connection()
 		cur = conn.cursor()
 		cur.execute(sql,(user_id,))
@@ -131,7 +131,7 @@ class Drift(object):
 		'''
 		查询某位用户接收别人的礼物
 		'''
-		sql = 'select d.id,b.id as book_id,title,nickname,status from drift d,user u,book b where recipient_id=%s and u.id=giver_id and b.id=book_id;'
+		sql = 'select d.id,b.id as book_id,title,nickname,status,address from drift d,user u,book b where recipient_id=%s and u.id=giver_id and b.id=book_id;'
 		conn = pool.connection()
 		cur = conn.cursor()
 		cur.execute(sql,(user_id,))
