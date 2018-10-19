@@ -121,6 +121,7 @@
 								<tr>
 									<th>#</th>
 									<th>心愿人</th>
+									<th>地址</th>
 									<th>操作</th>
 								</tr>
 							</thead>
@@ -130,6 +131,7 @@
 									<tr>
 										<td>{{loop.index}}</td>
 										<td>{{wish.get('nickname')}}</td>
+										<td>{{wish.get('address')}}</td>
 										<td>
 											<form action="{{url_for('web.giveBook')}}" method="post">
 												<input type="hidden" name="book_id" readonly="readonly" value="{{book.get('id')}}">

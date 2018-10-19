@@ -164,7 +164,6 @@ def handleDrift():
 @web.route('/ok', methods=['POST','GET'])
 def ok():
 	# 在drift list 下同意请求
-	print(request.form, 'ok' in request.form)
 	if request.method=='POST':
 		username = session.get('username')
 		if not username:
@@ -179,7 +178,6 @@ def ok():
 			drift = Drift.find_drift_by_ID(drift_id)
 			rec_id = drift.get('recipient_id')
 			Wish.update('launched', '0', 'user_id', rec_id, drift.get('book_id'))
-			# Gift.update(uid, 'launched', '0', request.form.get('book_id'))
 			Drift.update(drift_id, 'status', '已拒绝')
 	return redirect(url_for('web.driftList'))
 

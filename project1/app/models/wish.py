@@ -62,7 +62,7 @@ class Wish():
 		'''
 		查询某本书相关的心愿
 		'''
-		sql = 'select user_id,nickname,launched from wish w,user u where w.book_id=%s and w.user_id=u.id and launched=%s;'
+		sql = 'select user_id,nickname,launched,address from wish w,user u where w.book_id=%s and w.user_id=u.id and launched=%s;'
 		conn = pool.connection()
 		cur = conn.cursor()
 		cur.execute(sql,(book_id,'0', ))
