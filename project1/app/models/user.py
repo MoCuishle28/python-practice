@@ -1,5 +1,6 @@
 from .base import pool
 import MySQLdb
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(object):
@@ -13,14 +14,14 @@ class User(object):
 	email
 	'''
 
-	def __init__(self, username, password, nickname, address, phone, email, _id):
+	def __init__(self, username, password, nickname, address, phone, email):
 		self.username = username
 		self.password = password
 		self.nickname = nickname
 		self.address = address
 		self.phone = phone
 		self.email = email
-		self.id = int(_id)
+		# self.id = int(_id)
 
 
 	def insert(self):
@@ -125,3 +126,15 @@ class User(object):
 		cur.close()
 		conn.close()
 		return ret
+
+	@classmethod
+	def check_password(cls,username ,raw):
+		# raw: 页面上输入的原始密码
+		sql = 'select password from user where username=%s;'
+		conn = pool.connection()
+		cur = conn.cursor(cursorclass = MySQLdb.cursors.DictCursor)	# 设置返回字典
+		cur.execute(sql, (username,))
+		ret = cur.fetchall()[0]	# 得到一个元组 每个元素为一个字典
+		cur.close()
+		conn.close()
+		return check_password_hash(ret['password'], raw)

@@ -5,6 +5,7 @@ from app.models.user import User
 from app.models.gift import Gift
 from app.models.wish import Wish
 from app.models.drift import Drift
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 @web.route('/')
@@ -25,11 +26,11 @@ def register():
 	if request.method == 'POST':
 		username = request.form.get('username')
 		password = request.form.get('password')
+		password = generate_password_hash(password)		# hash加密
 		nickname = request.form.get('nickname')
 		address = request.form.get('address')
 		phone = request.form.get('phone')
 		email = request.form.get('email')
-		print(address)
 
 		if User.valid_user(username):
 			msg = "该账号已经存在"
@@ -51,7 +52,7 @@ def login():
 		username = form.get('username')
 		password = form.get('password')
 		ret = User.valid_user(username)
-		if ret and ret[1] == password:
+		if ret and User.check_password(username, password):
 			# 操作session 浏览器与服务器的一次会话
 			session['username'] = username
 			# session permanent 持久化置为True则session课保存31天.
@@ -153,12 +154,6 @@ def driftList():
 	giver_list = Drift.get_giver_drift(user_id)
 	recipient_list = Drift.get_recipient_id_drift(user_id)
 	return render_template('driftList.html', username=username, giver_list=giver_list, recipient_list=recipient_list)
-
-
-@web.route('/handleDrift')
-def handleDrift():
-	# 处理交易清单 确认信息 TODO
-	pass
 
 
 @web.route('/ok', methods=['POST','GET'])
