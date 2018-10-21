@@ -251,7 +251,7 @@ def personal():
 @web.route('/changeInfo', methods=['POST', 'GET'])
 def changeInfo():
 	user = User(request.form.get('username'), request.form.get('password'), request.form.get('nickname'), 
-		request.form.get('address'), request.form.get('phone'), request.form.get('email'), request.form.get('id'))
+		request.form.get('address'), request.form.get('phone'), request.form.get('email'))
 	print(user.update())
 	return redirect(url_for('web.index'))
 
