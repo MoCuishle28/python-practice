@@ -1,0 +1,1 @@
+{"root": {"password": "pbkdf2:sha256:50000$B4YDIyuI$5ac7a52126b79986245af485f0fbdb3ef5f606f212742408854c8e3030ed89d4", "permissions": "w-r-u"}, "user1": {"password": "pbkdf2:sha256:50000$9v6edV5J$43ce1b992f877b10895eebda3bfccf395ac122c5a89cb3bb5b001bab7a064976", "permissions": "r"}}

@@ -38,4 +38,8 @@ project1:	数据库应用 写一个赠送图书的网站zonda
 				requests
 				beautifulsoup4					文档(中文): 	https://beautifulsoup.readthedocs.io/zh_CN/v4.4.0/
 
+DBMS_Simulate:	模拟一个DBMS（缺少sql编译系统）
+				完成常规的sql操作 如：create, alter, drop, insert, delete, select ...
+				完成索引的添加 (add index)
+
 解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/
