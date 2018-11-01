@@ -93,7 +93,12 @@ class SQL_Func(object):
 			if name in cls.tables_set:
 				print(name, '已存在')
 				return False
-			else:
-				pass
-				# TODO 创建数据表 写入数据字典
+			else:	# 创建表
+				cls.createTable(command_str)
 		return True
+
+
+		@classmethod
+		def createTable(cls, command_str):
+			# 创建Table 添加各种约束
+			pass
