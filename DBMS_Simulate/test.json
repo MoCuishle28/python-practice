@@ -1,0 +1,5 @@
+{
+	"id": ["char(10)", "auto_increment"], 
+	"name": ["varchar(12)", "notnull"], 
+	"primary_key": "id"
+}

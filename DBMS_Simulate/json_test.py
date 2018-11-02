@@ -14,9 +14,15 @@ user = {
 }
 
 
-json_str = json.dumps(user)
-print(json_str)
+# json_str = json.dumps(user)
+# print(json_str)
 
+
+with open('test.json', 'r') as f:
+	data = json.load(f)
+print(data)
+for k,v in data.items():
+	print(k, ' ', v)
 
 # json的文件相关
 # with open('user.json', 'w') as f:
