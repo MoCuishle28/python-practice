@@ -29,17 +29,13 @@ class SQL_Func(object):
 			return False
 		name = result.group('name')
 
-		if cls.curr_database == '':			# 当前尚未使用数据库
-			if name in cls.database_set:
-				cls.curr_database = name
-				with open(db_path + '\\' + name + '\\tables.dict', 'r') as f:
-					tables = f.read()
-					cls.tables_set = set(tables.split())	# 更新数据表集合
-			else:
-				print(name, '数据库不存在')
-				return False
+		if name in cls.database_set:
+			cls.curr_database = name
+			with open(db_path + '\\' + name + '\\tables.dict', 'r') as f:
+				tables = f.read()
+				cls.tables_set = set(tables.split())	# 更新数据表集合
 		else:
-			print('已使用', cls.curr_database)
+			print(name, '数据库不存在')
 			return False
 		return True
 
@@ -90,7 +86,7 @@ class SQL_Func(object):
 				cls.database_set = load_database()				# 更新数据库集合
 
 				os.mkdir(db_path + '\\' + name)		# 创建对应文件夹
-				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:	# BUG
+				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:
 					f.write('')
 		else:	# 已使用数据库 则创建数据表
 			return cls.createTable(command_str)
@@ -125,21 +121,37 @@ class SQL_Func(object):
 				table_dict['primary_key'] = key_list;	# 主键可能有多个
 				continue
 
-			field_name = filter(is_key_word, x)
+			field_name = filter(is_key_word, x)	# 得到一个符合 is_key_word 要求的迭代器
 			tar_name = ''
 			for field in field_name:
 				table_dict[field] = []
 				tar_name = field
 			field_name = tar_name
-			for i,value in enumerate(x):
-				if i == 0:
-					continue
-				table_dict[field_name].append(value)
+			for value in x:
+				if value != field_name:
+					table_dict[field_name].append(value)
 		
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.json', 'w') as f:
 			json.dump(table_dict, f)
 		return True
-	
+
+
+
+	@classmethod
+	def cls(cls, command_str):
+		if not re.match(r'cls$', command_str):
+			return False
+		os.system('cls')
+		return True
+
+
+	@classmethod
+	def exit(cls, command_str):
+		if not re.match(r'exit$', command_str):
+			return False
+		print('bye!')
+		exit()
+		return True
 
 
 	# 添加数据库名字到对应数据库的数据字典中

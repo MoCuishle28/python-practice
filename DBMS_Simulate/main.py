@@ -20,6 +20,7 @@ with open(dict_path+'\\user.json', 'r') as f:
 	password = data.get('root').get('password')
 	psw = getpass.getpass('password:')
 	if not check_password_hash(password, psw):
+		print('密码错误!')
 		exit()
 
 
@@ -28,12 +29,8 @@ command = ''
 command_str = ''
 
 while Keep:
-	command += input(SQL_Func.curr_database + '>')
+	command += ' ' + input(SQL_Func.curr_database + '>')
 	command = command.strip()
-	if command == 'cls':
-		os.system('cls')
-		command = ''
-		continue
 
 	if command[-1] == ';':
 		command = command.replace(';','')
@@ -45,10 +42,6 @@ while Keep:
 	if command.split()[0] not in sql_os_set:
 		print('not exist this sql.')
 		command = ''
-		continue
-	elif command.split()[0] == 'exit':
-		Keep = False
-		print('bye!')
 		continue
 	else:
 		func = sql_func.get(command.split()[0])
