@@ -96,7 +96,8 @@ class SQL_Func(object):
 	# 创建Table 添加各种约束
 	@classmethod 
 	def createTable(cls, command_str):
-		is_key_word = lambda x: x not in cls.key_word and 'char' not in x and 'int' not in x	
+		is_not_key_word = lambda x: x not in cls.key_word and 'char' not in x and 'int' not in x
+		is_key_word = lambda x: x in cls.key_word or 'char' in x or 'int' in x
 		# create table t(id int(11) notnull auto_increment, name char(20) notnull, primary_key(id));
 		result = re.match(r'create table (?P<name>\w+)\((?P<permission>.+)\)$', command_str)
 		if not result:
@@ -107,7 +108,7 @@ class SQL_Func(object):
 			print(name, '已存在')
 			return False
 
-		cls.add_to_database_dict(name)	# 把表名写入对应数据库的数据字典
+		
 		tmp_arr = result.group('permission').split(',')
 		permission = []
 		for x in tmp_arr:
@@ -121,20 +122,77 @@ class SQL_Func(object):
 				table_dict['primary_key'] = key_list;	# 主键可能有多个
 				continue
 
-			field_name = filter(is_key_word, x)	# 得到一个符合 is_key_word 要求的迭代器
+			field_name = filter(is_not_key_word, x)	# 得到一个符合 is_not_key_word 要求的迭代器
 			tar_name = ''
 			for field in field_name:
 				table_dict[field] = []
 				tar_name = field
+				break
 			field_name = tar_name
 			for value in x:
-				if value != field_name:
+				if value != field_name and is_key_word(value):	# 不是表名并且是关键字
 					table_dict[field_name].append(value)
-		
+				elif value != field_name and not is_key_word(value):
+					print(value+' 不是关键字')
+					return False
+					
+		cls.add_to_database_dict(name)	# 把表名写入对应数据库的数据字典
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.json', 'w') as f:
 			json.dump(table_dict, f)
+		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.txt', 'w') as f:
+			f.write('')
 		return True
 
+
+	@classmethod
+	def insert(cls, command_str):
+		# insert into t('id','name') values(1, 'a');
+		result = re.match(r'insert into (?P<table_name>\w+)(?P<target_items>.*) values\((?P<values_list>.+)\)$', command_str)
+		if not result or not cls.curr_database:
+			print('sql error')
+			return False
+		is_item_size = lambda x: 'char' in x or 'int' in x
+		table_name = result.group('table_name')
+		# 值列表
+		values_list = result.group('values_list').split(',')
+		# 指定字段列表 可能为空
+		target_items = [ item.replace('\'','') for item in re.findall(r'[(](.*?)[)]', result.group('target_items')).pop().split(',')]
+
+		table_dict = {}
+		if table_name not in cls.tables_set:
+			print(table_name+' 该表不存在')
+			return False
+		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+
+		# 检验合法性
+		if target_items:	# 带指定插入内容
+			if not cls.valid_items_exist(target_items, table_dict):
+				return False
+			# 约束判定！ 应该写成一个单独的函数!	TODO
+			for index,value in enumerate(values_list):
+				item_size = 4
+				tar_item = ''
+				for item in table_dict.get(target_items[index], []):
+					if is_item_size(item):
+						item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
+						tar_item = item.split('(')[0]
+						break
+				limit_size = item_size
+				if tar_item == 'int' and value.isdigit():
+					print(int(value), 'in')
+					# 判定int大小是否超出限制！ 	TODO
+				elif tar_item == 'char' and not value.isdigit():
+					print(value, 'in')
+					if len(value) > limit_size:
+						print(value+'长度大于'+limit_size)
+						return False
+				else:
+					print(value+" 不是"+tar_item+'类型的')
+					return False
+				# TODO 还要判断unique primary_key等
+		else:				# 不带的
+			pass
 
 
 	@classmethod
@@ -160,3 +218,13 @@ class SQL_Func(object):
 		with open(db_path+'\\'+cls.curr_database+'\\'+'tables.dict', 'a') as f:
 			f.write('\n'+table_name)
 		cls.tables_set.add(table_name)
+
+
+	# 检验属性是否存在
+	@classmethod
+	def valid_items_exist(cls, target_items, table_dict):
+		for item in target_items:
+			if item not in table_dict.keys():
+				print(item+" 不存在")
+				return False
+		return True

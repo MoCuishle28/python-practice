@@ -15,13 +15,13 @@ for sql in sql_os_set:
 
 
 # 输入密码
-with open(dict_path+'\\user.json', 'r') as f:
-	data = json.load(f)
-	password = data.get('root').get('password')
-	psw = getpass.getpass('password:')
-	if not check_password_hash(password, psw):
-		print('密码错误!')
-		exit()
+# with open(dict_path+'\\user.json', 'r') as f:
+# 	data = json.load(f)
+# 	password = data.get('root').get('password')
+# 	psw = getpass.getpass('password:')
+# 	if not check_password_hash(password, psw):
+# 		print('密码错误!')
+# 		exit()
 
 
 Keep = True
@@ -29,14 +29,14 @@ command = ''
 command_str = ''
 
 while Keep:
-	command += ' ' + input(SQL_Func.curr_database + '>')
+	command += ' ' + input(SQL_Func.curr_database + '> ')
 	command = command.strip()
 
 	if command[-1] == ';':
 		command = command.replace(';','')
 		command_str = command
 	else:
-		print('-->', end='')
+		print('--> ', end='')
 		continue
 
 	if command.split()[0] not in sql_os_set:
