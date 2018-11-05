@@ -40,10 +40,11 @@ while Keep:
 		continue
 
 	if command.split()[0] not in sql_os_set:
-		print('not exist this sql.')
+		print(command.split()[0], 'not exist this sql.')
 		command = ''
 		continue
 	else:
+		command_str = command_str.strip()
 		func = sql_func.get(command.split()[0])
 		print(func(command_str)) 	# 调用相关的处理函数
 		command = ''

@@ -20,7 +20,7 @@ class SQL_Func(object):
 	curr_database = ''				# 当前使用的数据库
 	tables_set = set()				# 当前数据库的表
 	# 保留字集合
-	key_word = {'auto_increment', 'notnull', 'primary_key', 'unique', 'char', 'int'}
+	key_word = {'auto_increment', 'notnull', 'primary_key', 'foreign_key', 'unique', 'char', 'int'}
 
 	@classmethod
 	def use(cls, command_str):
@@ -71,7 +71,6 @@ class SQL_Func(object):
 	@classmethod
 	def create(cls, command_str):
 		if cls.curr_database == '':	# 当前未使用数据库 则创建的是数据库
-
 			result = re.match(r'create (?P<name>\w+)$', command_str)
 			if not result:
 				return False
@@ -108,7 +107,6 @@ class SQL_Func(object):
 			print(name, '已存在')
 			return False
 
-		
 		tmp_arr = result.group('permission').split(',')
 		permission = []
 		for x in tmp_arr:
@@ -151,12 +149,13 @@ class SQL_Func(object):
 		if not result or not cls.curr_database:
 			print('sql error')
 			return False
-		is_item_size = lambda x: 'char' in x or 'int' in x
+		
 		table_name = result.group('table_name')
 		# 值列表
 		values_list = result.group('values_list').split(',')
 		# 指定字段列表 可能为空
-		target_items = [ item.replace('\'','') for item in re.findall(r'[(](.*?)[)]', result.group('target_items')).pop().split(',')]
+		target_items = re.findall(r'[(](.*?)[)]', result.group('target_items'))
+		target_items = [ item.replace('\'','') for item in (target_items.pop().split(',') if target_items else []) ]
 
 		table_dict = {}
 		if table_name not in cls.tables_set:
@@ -166,33 +165,19 @@ class SQL_Func(object):
 			table_dict = json.load(f)
 
 		# 检验合法性
+		
 		if target_items:	# 带指定插入内容
 			if not cls.valid_items_exist(target_items, table_dict):
 				return False
-			# 约束判定！ 应该写成一个单独的函数!	TODO
-			for index,value in enumerate(values_list):
-				item_size = 4
-				tar_item = ''
-				for item in table_dict.get(target_items[index], []):
-					if is_item_size(item):
-						item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
-						tar_item = item.split('(')[0]
-						break
-				limit_size = item_size
-				if tar_item == 'int' and value.isdigit():
-					print(int(value), 'in')
-					# 判定int大小是否超出限制！ 	TODO
-				elif tar_item == 'char' and not value.isdigit():
-					print(value, 'in')
-					if len(value) > limit_size:
-						print(value+'长度大于'+limit_size)
-						return False
-				else:
-					print(value+" 不是"+tar_item+'类型的')
-					return False
-				# TODO 还要判断unique primary_key等
-		else:				# 不带的
-			pass
+			# 是否全部待插入数据约束判定都成立
+			if cls.valid_items_limit(values_list, target_items ,table_dict, table_name):
+				# 如果约束成立 则将数据插入
+				print('Insert')
+				pass
+			else:
+				return False
+		else:	# 不带的指定字段的插入
+			# TODO
 
 
 	@classmethod
@@ -227,4 +212,49 @@ class SQL_Func(object):
 			if item not in table_dict.keys():
 				print(item+" 不存在")
 				return False
+		return True
+
+
+	# 根据数据字典判定插入数据的约束是否成立
+	@classmethod
+	def valid_items_limit(cls, values_list, target_items, table_dict, table_name):
+		'''
+		value_list:		插入数据列表
+		target_items:	字段列表
+		table_dict:		数据字典
+		'''
+		if len(values_list) != len(target_items):
+			print('插入数据数量与字段数不匹配')
+			return False
+		is_item_size = lambda x: 'char' in x or 'int' in x		# 判断是否是长度约束
+		for index,value in enumerate(values_list):
+			item_size = 5
+			tar_item = ''	# 数据类型
+			for item in table_dict.get(target_items[index], []):
+				if is_item_size(item):
+					item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
+					tar_item = item.split('(')[0]
+					break
+			limit_size = item_size 	# 数据长度约束
+			if tar_item == 'int' and value.isdigit():
+				if len(bin(int(value))) > limit_size:
+					print(value+'长度大于'+limit_size)
+					return False
+			elif tar_item == 'char' and '\'' in value:
+				if len(value) > limit_size:
+					print(value+'长度大于'+limit_size)
+					return False
+			else:
+				print(value+" 不是"+tar_item+'类型的')
+				return False
+
+			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.txt', 'r') as f:
+				if 'unique' in table_dict.get(target_items[index], []) or table_dict['primary_key'] == value:
+					# TODO 	判定是否唯一
+					pass
+				if 'auto_increment'	 in table_dict.get(target_items[index], []):
+					curr_max = 0
+					# TODO	找到最大的
+					
+			# TODO 	还要判断 foreign_key
 		return True
