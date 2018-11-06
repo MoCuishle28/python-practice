@@ -5,6 +5,8 @@
 import os
 import re
 import json
+
+
 from config import db_path, dict_path
 
 
@@ -21,6 +23,7 @@ class SQL_Func(object):
 	tables_set = set()				# 当前数据库的表
 	# 保留字集合
 	key_word = {'auto_increment', 'notnull', 'primary_key', 'foreign_key', 'unique', 'char', 'int'}
+
 
 	@classmethod
 	def use(cls, command_str):
@@ -113,7 +116,7 @@ class SQL_Func(object):
 			permission.append(x.split())
 		table_dict = {}		# 创建表的数据字典
 
-		for x in permission:
+		for index,x in enumerate(permission):
 			if 'primary_key' in x[0]:
 				key_list = re.findall(r'[(](.*?)[)]', x[0])
 				key_list = key_list[0].split('/') if key_list else []
@@ -133,11 +136,12 @@ class SQL_Func(object):
 				elif value != field_name and not is_key_word(value):
 					print(value+' 不是关键字')
 					return False
+			table_dict[field_name].append(index)	# 制定当前字段在数据表的第几列
 					
 		cls.add_to_database_dict(name)	# 把表名写入对应数据库的数据字典
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.json', 'w') as f:
 			json.dump(table_dict, f)
-		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.txt', 'w') as f:
+		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.db', 'w') as f:
 			f.write('')
 		return True
 
@@ -164,20 +168,24 @@ class SQL_Func(object):
 		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
 			table_dict = json.load(f)
 
-		# 检验合法性
-		
+		# 检验合法性:
 		if target_items:	# 带指定插入内容
 			if not cls.valid_items_exist(target_items, table_dict):
 				return False
 			# 是否全部待插入数据约束判定都成立
 			if cls.valid_items_limit(values_list, target_items ,table_dict, table_name):
 				# 如果约束成立 则将数据插入
-				print('Insert')
+				with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
+					# TODO 设定空值 以及auto_increment
+					f.write('\n'+str(values_list)+';')
 				pass
 			else:
 				return False
-		else:	# 不带的指定字段的插入
-			# TODO
+		# 不带的指定字段的插入  验证默认插入顺序
+		elif cls.valid_items_limit_without_targetItems(values_list, table_dict, table_name):
+			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
+				f.write(str(values_list)+';'+'\n')
+		return True
 
 
 	@classmethod
@@ -215,6 +223,24 @@ class SQL_Func(object):
 		return True
 
 
+
+	# 验证不带制定字段的插入
+	@classmethod
+	def valid_items_limit_without_targetItems(cls, values_list, table_dict, table_name):
+		pass
+
+
+	@classmethod
+	def form_table_data(cls, old_data):
+		ret = []
+		for item in old_data:
+			item = item.replace('[', '')
+			item = item.replace(']', '')
+			item = item.replace('\"', '')
+			ret.append(item.replace(' ', '').split(','))
+		return ret
+
+
 	# 根据数据字典判定插入数据的约束是否成立
 	@classmethod
 	def valid_items_limit(cls, values_list, target_items, table_dict, table_name):
@@ -222,39 +248,59 @@ class SQL_Func(object):
 		value_list:		插入数据列表
 		target_items:	字段列表
 		table_dict:		数据字典
+		insert into t('id','name','phone') values(1,'a','220981');
 		'''
 		if len(values_list) != len(target_items):
 			print('插入数据数量与字段数不匹配')
 			return False
-		is_item_size = lambda x: 'char' in x or 'int' in x		# 判断是否是长度约束
+
+		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'r') as f:
+			old_data = f.read().strip().replace('\n','').split(';')
+			old_data = [item.replace('\'','') for item in old_data]
+			old_data.pop()
+			old_data = cls.form_table_data(old_data)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
+
 		for index,value in enumerate(values_list):
-			item_size = 5
-			tar_item = ''	# 数据类型
-			for item in table_dict.get(target_items[index], []):
-				if is_item_size(item):
-					item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
-					tar_item = item.split('(')[0]
-					break
-			limit_size = item_size 	# 数据长度约束
-			if tar_item == 'int' and value.isdigit():
-				if len(bin(int(value))) > limit_size:
-					print(value+'长度大于'+limit_size)
-					return False
-			elif tar_item == 'char' and '\'' in value:
-				if len(value) > limit_size:
-					print(value+'长度大于'+limit_size)
-					return False
-			else:
-				print(value+" 不是"+tar_item+'类型的')
+			if not cls.valid_type_limit(table_dict, target_items, value, index):
 				return False
 
-			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.txt', 'r') as f:
-				if 'unique' in table_dict.get(target_items[index], []) or table_dict['primary_key'] == value:
-					# TODO 	判定是否唯一
-					pass
-				if 'auto_increment'	 in table_dict.get(target_items[index], []):
-					curr_max = 0
-					# TODO	找到最大的
+			# 判定约束是否成立
+			if 'unique' in table_dict.get(target_items[index], []) or target_items[index] in table_dict['primary_key']:
+				# 判定是否唯一
+				for item in old_data:
+					if item[ table_dict.get(target_items[index])[-1] ] == value.replace('\'',''):
+						print(value+"重复出现,不符合约束要求")
+						return False
+			if 'auto_increment'	 in table_dict.get(target_items[index], []):
+				curr_max = 0
+				# TODO	找到最大的
+			# 设置空值为空	TODO
 					
 			# TODO 	还要判断 foreign_key
+		return True
+
+
+	# 验证类型及大小是否匹配
+	@classmethod
+	def valid_type_limit(cls, table_dict, target_items, value, index):
+		is_item_size = lambda x: 'char' in x or 'int' in x		# 判断是否是长度约束
+		item_size = 5
+		tar_item = ''	# 数据类型
+		for item in table_dict.get(target_items[index], []):
+			if is_item_size(item):
+				item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
+				tar_item = item.split('(')[0]
+				break
+		limit_size = item_size 	# 数据长度约束
+		if tar_item == 'int' and value.isdigit():
+			if len(bin(int(value))) > limit_size:
+				print(value+'长度大于'+limit_size)
+				return False
+		elif tar_item == 'char' and '\'' in value:
+			if len(value) > limit_size:
+				print(value+'长度大于'+limit_size)
+				return False
+		else:
+			print(value+" 不是"+tar_item+'类型的')
+			return False
 		return True

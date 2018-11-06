@@ -21,3 +21,32 @@ print(getline('test.db', 3))
 
 
 # os.mkdir('testFile') # 创建文件目录
+
+data = [1, 'a']
+with open('test1.db', 'a') as f:
+	f.write(str(data)+';'+'\n')
+
+
+with open('test1.db', 'r') as f:
+	data = f.read().replace('\n', '')
+	print(data)
+	data = data.split(';')
+
+
+print('=====================')
+for x in data:
+	print(x)
+
+class A(object):
+	
+	@classmethod
+	def f(cls, a):
+		print(a)
+
+	@classmethod
+	def f(cls, a, b):
+		print(a, b)
+
+
+A.f(1)
+A.f(100, 200)
