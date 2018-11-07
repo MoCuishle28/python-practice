@@ -23,7 +23,7 @@ class SQL_Func(object):
 	curr_database = ''				# 当前使用的数据库
 	tables_set = set()				# 当前数据库的表
 	# 保留字集合
-	key_word = {'auto_increment', 'notnull', 'primary_key', 'foreign_key', 'unique', 'char', 'int'}
+	key_word = {'auto_increment', 'notnull', 'primary_key', 'foreign_key', 'unique', 'char', 'int', 'float'}
 
 
 	@classmethod
@@ -129,6 +129,9 @@ class SQL_Func(object):
 				tar_name = field
 				break
 			field_name = tar_name
+			if field_name in table_dict:
+				print(field_name,'属性名重复')
+				return False
 			for value in x:
 				if value != field_name and is_key_word(value):	# 不是表名并且是关键字
 					table_dict[field_name].append(value)
@@ -144,6 +147,33 @@ class SQL_Func(object):
 			f.write('')
 		return True
 
+
+	# alter操作 包含数据表字段的增删改
+	@classmethod
+	def alter(cls, command_str):
+		# alter table t add launched char(1) notnull;
+		result = re.match(r'alter table (?P<table_name>\w+) (?P<alter_type>\w+) (?P<operate>.+)$',command_str)
+		if not result:
+			print('sql error')
+			return False
+		table_name = result.group('table_name')
+		alter_type = result.group('alter_type')
+		operate = result.group('operate')
+		operates = operate.split()
+		field_name = operate[0]
+		if table_name not in cls.tables_set:
+			print(table_name, '不存在')
+			return False
+		if alter_type == 'add':
+			pass
+		elif alter_type == 'drop':
+			pass
+		elif alter_type == 'modify':
+			pass
+		else:
+			print(alter_type, '操作不存在')
+			return False
+		return True
 
 	@classmethod
 	def insert(cls, command_str):
@@ -175,14 +205,16 @@ class SQL_Func(object):
 			if Valid.valid_items_limit(values_list, target_items ,table_dict, table_name, cls.curr_database):
 				# 如果约束成立 则将数据插入
 				with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
-					f.write('\n'+str(values_list)+';')
+					f.write('\n' + str(values_list) + ';')
 				pass
 			else:
 				return False
 		# 不带的指定字段的插入  验证默认插入顺序
-		elif Valid.valid_items_limit_without_targetItems(values_list, table_dict, table_name):
+		elif Valid.valid_items_limit_without_targetItems(values_list, table_dict, table_name, cls.curr_database):
 			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
-				f.write(str(values_list)+';'+'\n')
+				f.write('\n' + str(values_list) + ';')
+		else:
+			return False
 		return True
 
 

@@ -16,15 +16,26 @@ class Valid(object):
 	def valid_items_exist(cls, target_items, table_dict):
 		for item in target_items:
 			if item not in table_dict.keys():
-				print(item+" 不存在")
+				print(item," 不存在")
 				return False
 		return True
 
 
 	# 验证不带制定字段的插入
 	@classmethod
-	def valid_items_limit_without_targetItems(cls, values_list, table_dict, table_name):
-		pass
+	def valid_items_limit_without_targetItems(cls, values_list, table_dict, table_name, curr_database):
+		filds_cnt =	len(table_dict) if 'primary_key' not in table_dict else len(table_dict) - 1 # 字段数
+		target_items = []
+		# 有省略了某些可以为空的数据
+		if len(values_list) == filds_cnt:
+			target_items = [k for k in table_dict.keys()]
+			if 'primary_key' in target_items:
+				target_items.remove('primary_key')
+		elif len(values_list) != filds_cnt:
+			for k,v in table_dict.items():
+				if 'notnull' in v:
+					target_items.append(k)
+		return cls.valid_items_limit(values_list, target_items, table_dict, table_name, curr_database)		
 
 
 	# 找到自动增长的当前值
@@ -75,14 +86,16 @@ class Valid(object):
 		for index,value in enumerate(values_list):
 			if not cls.valid_type_limit(table_dict, target_items, value, index):
 				return False
-			# 判定约束是否成立
-			if 'unique' in table_dict.get(target_items[index], []) or (target_items[index] in table_dict['primary_key'] and 'auto_increment' not in table_dict[target_items[index]]):
+			# 判定唯一性约束是否成立
+			if 'unique' in table_dict.get(target_items[index], []) or target_items[index] in table_dict['primary_key']:
 				# 判定是否唯一
 				for item in old_data:
-					if item[ table_dict.get(target_items[index])[-1] ] == value.replace('\'',''):
-						print(value+"重复出现,不符合约束要求")
+					value = value.replace('\'','') if type(value) == str and '\'' in value else value
+					value = value.replace('\"','') if type(value) == str and '\"' in value else value
+					if item[ table_dict.get(target_items[index])[-1] ] == value:
+						print(value,"重复出现,不符合约束要求")
 						return False
-			# 还要判断 foreign_key
+			# 判断 foreign_key
 			if 'foreign_key' in table_dict.get(target_items[index], []):
 				# TODO
 				pass
@@ -103,18 +116,19 @@ class Valid(object):
 		limit_size = item_size 	# 数据长度约束
 		if tar_item == 'int' and (type(value) is int or value.isdigit()):
 			if len(bin(int(value))) > limit_size:
-				print(value+'长度大于'+limit_size)
+				print(value,'长度大于',limit_size)
 				return False
 		elif tar_item == 'char' and ('\'' in value or not value.isdigit()):
 			if len(value) > limit_size:
-				print(value+'长度大于'+limit_size)
+				print(value,'长度大于',limit_size)
 				return False
 		else:
-			print(value+" 不是"+tar_item+'类型的')
+			print(value,"不是",tar_item,'类型的')
 			return False
 		return True
 
 
+	# 对读取的数据表数据进行规范化 转换为二维列表 包含 int 和 float的转换
 	@classmethod
 	def form_table_data(cls, old_data, table_dict):
 		ret = []
@@ -135,6 +149,7 @@ class Valid(object):
 		return ret
 
 
+	# 对待插入数据进行 int 和 float的转换
 	@classmethod
 	def form_values_list(cls, values_list, table_dict):
 		ret = []
