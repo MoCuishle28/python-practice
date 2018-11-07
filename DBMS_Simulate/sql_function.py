@@ -8,6 +8,7 @@ import json
 
 
 from config import db_path, dict_path
+from valid import Valid
 
 
 def load_database():
@@ -45,10 +46,8 @@ class SQL_Func(object):
 
 	@classmethod
 	def show(cls, command_str):
-		if cls.curr_database == '':
-			result = re.match(r'show databases$', command_str)
-			if not result:
-				return False
+		result = re.match(r'show databases$', command_str)
+		if result:
 			print('----------')
 			print('Databases:')
 			print('----------')
@@ -170,19 +169,18 @@ class SQL_Func(object):
 
 		# 检验合法性:
 		if target_items:	# 带指定插入内容
-			if not cls.valid_items_exist(target_items, table_dict):
+			if not Valid.valid_items_exist(target_items, table_dict):
 				return False
 			# 是否全部待插入数据约束判定都成立
-			if cls.valid_items_limit(values_list, target_items ,table_dict, table_name):
+			if Valid.valid_items_limit(values_list, target_items ,table_dict, table_name, cls.curr_database):
 				# 如果约束成立 则将数据插入
 				with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
-					# TODO 设定空值 以及auto_increment
 					f.write('\n'+str(values_list)+';')
 				pass
 			else:
 				return False
 		# 不带的指定字段的插入  验证默认插入顺序
-		elif cls.valid_items_limit_without_targetItems(values_list, table_dict, table_name):
+		elif Valid.valid_items_limit_without_targetItems(values_list, table_dict, table_name):
 			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
 				f.write(str(values_list)+';'+'\n')
 		return True
@@ -211,96 +209,3 @@ class SQL_Func(object):
 		with open(db_path+'\\'+cls.curr_database+'\\'+'tables.dict', 'a') as f:
 			f.write('\n'+table_name)
 		cls.tables_set.add(table_name)
-
-
-	# 检验属性是否存在
-	@classmethod
-	def valid_items_exist(cls, target_items, table_dict):
-		for item in target_items:
-			if item not in table_dict.keys():
-				print(item+" 不存在")
-				return False
-		return True
-
-
-
-	# 验证不带制定字段的插入
-	@classmethod
-	def valid_items_limit_without_targetItems(cls, values_list, table_dict, table_name):
-		pass
-
-
-	@classmethod
-	def form_table_data(cls, old_data):
-		ret = []
-		for item in old_data:
-			item = item.replace('[', '')
-			item = item.replace(']', '')
-			item = item.replace('\"', '')
-			ret.append(item.replace(' ', '').split(','))
-		return ret
-
-
-	# 根据数据字典判定插入数据的约束是否成立
-	@classmethod
-	def valid_items_limit(cls, values_list, target_items, table_dict, table_name):
-		'''
-		value_list:		插入数据列表
-		target_items:	字段列表
-		table_dict:		数据字典
-		insert into t('id','name','phone') values(1,'a','220981');
-		'''
-		if len(values_list) != len(target_items):
-			print('插入数据数量与字段数不匹配')
-			return False
-
-		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'r') as f:
-			old_data = f.read().strip().replace('\n','').split(';')
-			old_data = [item.replace('\'','') for item in old_data]
-			old_data.pop()
-			old_data = cls.form_table_data(old_data)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
-
-		for index,value in enumerate(values_list):
-			if not cls.valid_type_limit(table_dict, target_items, value, index):
-				return False
-
-			# 判定约束是否成立
-			if 'unique' in table_dict.get(target_items[index], []) or target_items[index] in table_dict['primary_key']:
-				# 判定是否唯一
-				for item in old_data:
-					if item[ table_dict.get(target_items[index])[-1] ] == value.replace('\'',''):
-						print(value+"重复出现,不符合约束要求")
-						return False
-			if 'auto_increment'	 in table_dict.get(target_items[index], []):
-				curr_max = 0
-				# TODO	找到最大的
-			# 设置空值为空	TODO
-					
-			# TODO 	还要判断 foreign_key
-		return True
-
-
-	# 验证类型及大小是否匹配
-	@classmethod
-	def valid_type_limit(cls, table_dict, target_items, value, index):
-		is_item_size = lambda x: 'char' in x or 'int' in x		# 判断是否是长度约束
-		item_size = 5
-		tar_item = ''	# 数据类型
-		for item in table_dict.get(target_items[index], []):
-			if is_item_size(item):
-				item_size = int(re.findall(r'[(](.*?)[)]', item).pop())
-				tar_item = item.split('(')[0]
-				break
-		limit_size = item_size 	# 数据长度约束
-		if tar_item == 'int' and value.isdigit():
-			if len(bin(int(value))) > limit_size:
-				print(value+'长度大于'+limit_size)
-				return False
-		elif tar_item == 'char' and '\'' in value:
-			if len(value) > limit_size:
-				print(value+'长度大于'+limit_size)
-				return False
-		else:
-			print(value+" 不是"+tar_item+'类型的')
-			return False
-		return True

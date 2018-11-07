@@ -6,3 +6,5 @@ drop
 update
 delete
 exit
+cls
+insert
