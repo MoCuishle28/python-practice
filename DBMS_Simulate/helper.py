@@ -193,6 +193,18 @@ class Helper(object):
 		shutil.rmtree('data\\'+database_name)	# 删除对应文件夹
 
 
+	@classmethod
+	def drop_table(cls, curr_database, table_name):
+		with open(db_path + '\\' + curr_database + '\\tables.dict', 'r') as f:
+			tables_list = f.read().split()
+		tables_list.remove(table_name)
+		with open(db_path + '\\' + curr_database + '\\tables.dict', 'w') as f:
+			for x in tables_list:
+				f.write('\n'+x)
+		os.remove(db_path + '\\' + curr_database + '\\'+table_name+'.json')
+		os.remove(db_path + '\\' + curr_database + '\\'+table_name+'.db')
+
+
 	# 加载数据库集合
 	@classmethod
 	def load_database(cls):

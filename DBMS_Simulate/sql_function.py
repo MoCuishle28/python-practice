@@ -191,15 +191,19 @@ class SQL_Func(object):
 			return False
 		operate_type = result.group('operate_type')
 		name = result.group('name')
-		if name not in cls.database_set:
-			print(name, '不存在')
-			return False
 		if operate_type == 'database':
+			if name not in cls.database_set:
+				print(name, '不存在')
+				return False
 			Helper.drop_database(name)
 			cls.database_set = Helper.load_database()	# 更新数据库集合
 			cls.curr_database = ''
 		elif operate_type == 'table':
-			pass
+			if name not in cls.tables_set:
+				print(name, '不存在')
+				return False
+			Helper.drop_table(cls.curr_database, name)
+			cls.tables_set.remove(name)
 		elif operate_type == 'index':
 			pass
 		else:
