@@ -131,6 +131,9 @@ class Valid(object):
 	# 对读取的数据表数据进行规范化 转换为二维列表 包含 int 和 float的转换
 	@classmethod
 	def form_table_data(cls, old_data, table_dict):
+		'''
+		return:		返回一个二维表
+		'''
 		ret = []
 		for item in old_data:
 			item = item.replace('[', '')

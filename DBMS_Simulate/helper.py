@@ -12,32 +12,98 @@ from valid import Valid
 
 class Helper(object):
 
+	# 讲default 后面的值转换为指定的约束
+	@classmethod
+	def form_default_value(cls,operates_list , default_value):
+		result = re.match(r'(?P<field_name>\w+)=(?P<value>.+)', default_value)
+		if not result:
+			print(default_value, '语法错误')
+			return False, False
+		field_name = result.group('field_name')
+		default_value = result.group('value')
+
+		for item in operates_list:	# 数据转换
+			if 'int' in item and '\'' not in default_value:
+				default_value = int(default_value)
+				break
+			elif 'float' in item and '\'' not in default_value:
+				default_value = float(default_value)
+				break
+			elif ('int' in item or 'float' in item) and '\'' in default_value:
+				print(default_value, '不符合约束', item)
+				return False, False
+			elif 'char' in item:
+				default_value = default_value.replace('\'','')
+		return field_name, default_value
+
 
 	@classmethod
-	def add_field(cls, table_name, table_dict, operates_list):
+	def set_default_in_old_data(cls, curr_database, table_name, table_dict, new_field):
+		'''
+		对原有数据设置 新增/修改 字段默认取值
+		'''
+		with open(db_path + '\\' + curr_database + '\\'+table_name+'.db', 'r') as f:
+			old_data = f.read().strip().replace('\n','').split(';')
+			old_data = [item.replace('\'','') for item in old_data]
+			old_data.pop()
+			old_data = Valid.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
+		new_data = []
+		field_name, value = new_field 	# 拆包
+		for item in old_data:
+			item.append(value)
+			new_data.append(item)
+		with open(db_path + '\\' + curr_database + '\\'+table_name+'.db', 'w') as f:
+			for item in new_data:
+				f.write('\n' + str(item) + ';')
+
+
+	@classmethod
+	def add_field(cls, table_name, table_dict, operates_list, key_word, default_value, curr_database):
 		'''
 		添加字段
 		operates_list:	操作列表(包含：字段名 字段约束)
+		default_value:	设置默认数值的字符串
+		return:			修改后的数据字典	/ False
 		'''
-		pass
+		field_name, default_value = cls.form_default_value(operates_list, default_value)
+		if field_name == False:
+			return False
+		new_field = (field_name, default_value)
+		end_index = 0
+		# 找到最后一个索引值
+		for k,v in table_dict.items():
+			if k != 'primary_key' and v[-1] >= end_index:
+				end_index = v[-1] + 1
+
+		new_field_dict = cls.create_table_dict([operates_list], key_word)
+		if new_field_dict == False:
+			return False
+
+		for k,v in new_field_dict.items():
+			v[-1] = end_index
+			end_index += 1
+			table_dict[k] = v
+		# 为原来的添加默认值
+		cls.set_default_in_old_data(curr_database, table_name, table_dict, new_field)
+		return table_dict
 
 
 	@classmethod
 	def drop_field(cls, table_name, table_dict, operates_list):
 		'''
 		删除字段
-		table_dict:		数据字典
-		TODO
+		operates_list:	操作列表(包含：字段名 字段约束)
+		return:			修改后的数据字典	/ False
 		'''
 		pass
 
 
 	@classmethod
-	def modify_field(cls, table_name, table_dict, operates_list):
+	def modify_field(cls, table_name, table_dict, operates_list, key_word, default_value, curr_database):
 		'''
 		修改字段
-		table_dict:		数据字典
-		TODO
+		operates_list:	操作列表(包含：字段名 字段约束)
+		return:			修改后的数据字典	/ False
 		'''
 		pass
 
@@ -77,6 +143,14 @@ class Helper(object):
 					return False
 			table_dict[field_name].append(index)	# 制定当前字段在数据表的第几列
 		return table_dict
+
+
+	# 加载数据库集合
+	@classmethod
+	def load_database(cls):
+		with open(dict_path+'\\database.dict', 'r') as f:
+			database = f.read()
+		return set(database.split())	# 现有的数据库
 
 
 	# 添加数据库名字到对应数据库的数据字典中

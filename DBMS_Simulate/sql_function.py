@@ -12,15 +12,9 @@ from valid import Valid
 from helper import Helper
 
 
-def load_database():
-	with open(dict_path+'\\database.dict', 'r') as f:
-		database = f.read()
-	return set(database.split())	# 现有的数据库
-
-
 class SQL_Func(object):
 
-	database_set = load_database()	# 所有数据库集合
+	database_set = Helper.load_database()	# 所有数据库集合
 	curr_database = ''				# 当前使用的数据库
 	tables_set = set()				# 当前数据库的表
 	# 保留字集合
@@ -29,7 +23,7 @@ class SQL_Func(object):
 
 	@classmethod
 	def use(cls, command_str):
-		result = re.match(r'use (?P<name>\w+)$', command_str)
+		result = re.match(r'\s*use\s*(?P<name>\w+)\s*$', command_str)
 		if 	not result:
 			return False
 		name = result.group('name')
@@ -47,7 +41,7 @@ class SQL_Func(object):
 
 	@classmethod
 	def show(cls, command_str):
-		result = re.match(r'show databases$', command_str)
+		result = re.match(r'\s*show\s*databases\s*$', command_str)
 		if result:
 			print('----------')
 			print('Databases:')
@@ -57,7 +51,7 @@ class SQL_Func(object):
 			for item in cls.database_set:				
 				print(item)
 		else:
-			result = re.match(r'show tables$', command_str)
+			result = re.match(r'\s*show\s*tables\s*$', command_str)
 			if not result:
 				return False
 			print('----------')
@@ -74,7 +68,7 @@ class SQL_Func(object):
 	@classmethod
 	def create(cls, command_str):
 		if cls.curr_database == '':	# 当前未使用数据库 则创建的是数据库
-			result = re.match(r'create (?P<name>\w+)$', command_str)
+			result = re.match(r'\s*create\s*(?P<name>\w+)\s*$', command_str)
 			if not result:
 				return False
 			name = result.group('name')
@@ -85,7 +79,7 @@ class SQL_Func(object):
 			else:	# 创建数据库
 				with open(dict_path+'\\'+'database.dict', 'a') as f:
 					f.write('\n'+name)							# 写入数据库数据字典
-				cls.database_set = load_database()				# 更新数据库集合
+				cls.database_set = Helper.load_database()				# 更新数据库集合
 
 				os.mkdir(db_path + '\\' + name)		# 创建对应文件夹
 				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:
@@ -99,7 +93,7 @@ class SQL_Func(object):
 	@classmethod 
 	def createTable(cls, command_str):
 		# create table t(id int(11) notnull auto_increment, name char(20) notnull, primary_key(id));
-		result = re.match(r'create table (?P<name>\w+)\((?P<permission>.+)\)$', command_str)
+		result = re.match(r'\s*create\s*table\s*(?P<name>\w+)\((?P<permission>.+)\)\s*$', command_str)
 		if not result:
 			return False
 
@@ -128,46 +122,59 @@ class SQL_Func(object):
 	# alter操作 包含数据表字段的增删改
 	@classmethod
 	def alter(cls, command_str):
-		# alter table t add launched char(1) notnull;
-		result = re.match(r'alter table (?P<table_name>\w+) (?P<alter_type>\w+) (?P<operate>.+)$',command_str)
+		if cls.curr_database == '':
+			print('请先选择数据库')
+			return False
+		# alter table c add launched char(10) notnull default launched='0';
+		# alter table c add launched int(10) notnull default launched=0;
+		result = re.match(r'\s*alter\s*table\s*(?P<table_name>\w+)\s*(?P<alter_type>\w+)\s*(?P<operate>.+)\s*default\s*(?P<default_value>.+)\s*$',command_str)
 		if not result:
 			print('sql error')
 			return False
 		table_name = result.group('table_name')
 		alter_type = result.group('alter_type')
-		operate = result.group('operate')
-		operates_list = operate.split()
+		operates_list = result.group('operate').split()
 		field_name = operates_list[0]
+		default_value = result.group('default_value')
 
 		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
 			table_dict = json.load(f)
+
 		if table_name not in cls.tables_set:
 			print(table_name, '不存在')
 			return False
+
 		if alter_type == 'add':
 			if field_name in table_dict:
 				print(field_name, '字段已经存在')
 				return False
-			Helper.add_field(table_name, table_dict, operates_list)		# 添加字段
+			# 添加字段				
+			table_dict = Helper.add_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database)
 		elif alter_type == 'drop':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
-			Helper.drop_field(table_name, table_dict, operates_list)	# 删除字段
+			table_dict = Helper.drop_field(table_name, table_dict, operates_list)	# 删除字段
 		elif alter_type == 'modify':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
-			Helper.modify_field(table_name, table_dict, operates_list)	# 修改字段
+			# 修改字段
+			table_dict = Helper.modify_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database)
 		else:
 			print(alter_type, '操作不存在')
 			return False
-		return True
+		if table_dict != False:
+			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'w') as f:
+				json.dump(table_dict, f)
+			return True
+		return False
+
 
 	@classmethod
 	def insert(cls, command_str):
 		# insert into t('id','name') values(1, 'a');
-		result = re.match(r'insert into (?P<table_name>\w+)(?P<target_items>.*) values\((?P<values_list>.+)\)$', command_str)
+		result = re.match(r'\s*insert\s*into\s*(?P<table_name>\w+)(?P<target_items>.*)\s*values\((?P<values_list>.+)\)\s*$', command_str)
 		if not result or not cls.curr_database:
 			print('sql error')
 			return False
@@ -195,7 +202,6 @@ class SQL_Func(object):
 				# 如果约束成立 则将数据插入
 				with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.db', 'a') as f:
 					f.write('\n' + str(values_list) + ';')
-				pass
 			else:
 				return False
 		# 不带的指定字段的插入  验证默认插入顺序
@@ -209,7 +215,7 @@ class SQL_Func(object):
 
 	@classmethod
 	def cls(cls, command_str):
-		if not re.match(r'cls$', command_str):
+		if not re.match(r'\s*cls\s*$', command_str):
 			return False
 		os.system('cls')
 		return True
@@ -217,7 +223,7 @@ class SQL_Func(object):
 
 	@classmethod
 	def exit(cls, command_str):
-		if not re.match(r'exit$', command_str):
+		if not re.match(r'\s*exit\s*$', command_str):
 			return False
 		print('bye!')
 		exit()
