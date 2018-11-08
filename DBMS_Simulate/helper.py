@@ -4,6 +4,7 @@
 import os
 import re
 import json
+import shutil
 
 
 from config import db_path, dict_path
@@ -14,7 +15,7 @@ class Helper(object):
 
 	# 讲default 后面的值转换为指定的约束
 	@classmethod
-	def form_default_value(cls,operates_list , default_value):
+	def form_default_value(cls, operates_list ,default_value):
 		result = re.match(r'(?P<field_name>\w+)=(?P<value>.+)', default_value)
 		if not result:
 			print(default_value, '语法错误')
@@ -35,6 +36,25 @@ class Helper(object):
 			elif 'char' in item:
 				default_value = default_value.replace('\'','')
 		return field_name, default_value
+
+
+	@classmethod
+	def delete_field_data(cls, curr_database, table_name, table_dict, delete_field):
+		'''
+		删除指定字段的数据
+		'''
+		with open(db_path + '\\' + curr_database + '\\'+table_name+'.db', 'r') as f:
+			old_data = f.read().strip().replace('\n','').split(';')
+			old_data = [item.replace('\'','') for item in old_data]
+			old_data.pop()
+			old_data = Valid.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
+
+		del_index = table_dict[delete_field][-1]
+		new_data = filter(lambda item: item.pop(del_index), old_data)	# 过滤原数据
+
+		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
+			for item in new_data:
+				f.write('\n' + str(item) + ';')
 
 
 	@classmethod
@@ -89,13 +109,30 @@ class Helper(object):
 
 
 	@classmethod
-	def drop_field(cls, table_name, table_dict, operates_list):
+	def drop_field(cls, table_name, table_dict, operates_list, key_word, curr_database):
 		'''
 		删除字段
-		operates_list:	操作列表(包含：字段名 字段约束)
+		operates_list:	字段名
 		return:			修改后的数据字典	/ False
 		'''
-		pass
+
+		# 删除数据中对应字段的数据项
+		cls.delete_field_data(curr_database, table_name, table_dict, operates_list[0])
+		del table_dict[operates_list[0]]
+		if operates_list[0] in table_dict.get('primary_key', []):
+			table_dict.get('primary_key', []).remove(operates_list[0])
+			if table_dict.get('primary_key', []) == []:
+				del table_dict['primary_key']
+			if table_dict == {}:
+				# 删除表	TODO
+				pass
+
+		index = 0
+		for k,v in table_dict.items():
+			if k != 'primary_key':
+				table_dict[k][-1] = index
+				index += 1
+		return table_dict
 
 
 	@classmethod
@@ -143,6 +180,17 @@ class Helper(object):
 					return False
 			table_dict[field_name].append(index)	# 制定当前字段在数据表的第几列
 		return table_dict
+
+
+	@classmethod
+	def drop_database(cls, database_name):
+		with open(dict_path+'\\'+'database.dict', 'r') as f:
+			database_list = f.read().split()
+		database_list.remove(database_name)
+		with open(dict_path+'\\'+'database.dict', 'w') as f:
+			for x in database_list:
+				f.write('\n'+x)
+		shutil.rmtree('data\\'+database_name)	# 删除对应文件夹
 
 
 	# 加载数据库集合

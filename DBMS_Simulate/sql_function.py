@@ -5,6 +5,7 @@
 import os
 import re
 import json
+import shutil
 
 
 from config import db_path, dict_path
@@ -67,12 +68,14 @@ class SQL_Func(object):
 
 	@classmethod
 	def create(cls, command_str):
-		if cls.curr_database == '':	# 当前未使用数据库 则创建的是数据库
-			result = re.match(r'\s*create\s*(?P<name>\w+)\s*$', command_str)
-			if not result:
-				return False
-			name = result.group('name')
+		result = re.match(r'\s*create\s*(?P<operate_type>\w+)\s*(?P<name>\w+).*\s*$', command_str)
+		if not result:
+			return False
 
+		operate_type = result.group('operate_type')
+		name = result.group('name')
+
+		if operate_type == 'database':
 			if name in cls.database_set:
 				print(name, '已存在')
 				return False
@@ -84,6 +87,10 @@ class SQL_Func(object):
 				os.mkdir(db_path + '\\' + name)		# 创建对应文件夹
 				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:
 					f.write('')
+		elif operate_type == 'index':
+			pass
+		elif operate_type == 'user':
+			pass
 		else:	# 已使用数据库 则创建数据表
 			return cls.createTable(command_str)
 		return True
@@ -125,17 +132,17 @@ class SQL_Func(object):
 		if cls.curr_database == '':
 			print('请先选择数据库')
 			return False
-		# alter table c add launched char(10) notnull default launched='0';
-		# alter table c add launched int(10) notnull default launched=0;
 		result = re.match(r'\s*alter\s*table\s*(?P<table_name>\w+)\s*(?P<alter_type>\w+)\s*(?P<operate>.+)\s*default\s*(?P<default_value>.+)\s*$',command_str)
 		if not result:
-			print('sql error')
-			return False
+			result = re.match(r'\s*alter\s*table\s*(?P<table_name>\w+)\s*(?P<alter_type>\w+)\s*(?P<operate>.+)\s*', command_str)
+			if not result:
+				print('sql error')
+				return False
 		table_name = result.group('table_name')
 		alter_type = result.group('alter_type')
 		operates_list = result.group('operate').split()
 		field_name = operates_list[0]
-		default_value = result.group('default_value')
+		default_value = result.group('default_value') if 'default_value' in result.groupdict() else ''
 
 		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
 			table_dict = json.load(f)
@@ -143,18 +150,19 @@ class SQL_Func(object):
 		if table_name not in cls.tables_set:
 			print(table_name, '不存在')
 			return False
-
+		# alter table t add launched char(10) notnull default launched='0';
 		if alter_type == 'add':
 			if field_name in table_dict:
 				print(field_name, '字段已经存在')
 				return False
 			# 添加字段				
 			table_dict = Helper.add_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database)
+		# alter table b drop launched;
 		elif alter_type == 'drop':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
-			table_dict = Helper.drop_field(table_name, table_dict, operates_list)	# 删除字段
+			table_dict = Helper.drop_field(table_name, table_dict, operates_list, cls.key_word, cls.curr_database)	# 删除字段
 		elif alter_type == 'modify':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
@@ -169,6 +177,36 @@ class SQL_Func(object):
 				json.dump(table_dict, f)
 			return True
 		return False
+
+
+
+	@classmethod
+	def drop(cls, command_str):
+		'''
+		删除 数据库/表/索引/用户 等
+		'''
+		result = re.match(r'\s*drop\s*(?P<operate_type>\w+)\s*(?P<name>\w+)\s*$', command_str)
+		if not result:
+			print(command_str, 'sql语句错误')
+			return False
+		operate_type = result.group('operate_type')
+		name = result.group('name')
+		if name not in cls.database_set:
+			print(name, '不存在')
+			return False
+		if operate_type == 'database':
+			Helper.drop_database(name)
+			cls.database_set = Helper.load_database()	# 更新数据库集合
+			cls.curr_database = ''
+		elif operate_type == 'table':
+			pass
+		elif operate_type == 'index':
+			pass
+		else:
+			print(operate_type, '输入错误')
+			return False	
+		return True
+
 
 
 	@classmethod
