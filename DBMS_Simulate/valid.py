@@ -53,8 +53,8 @@ class Valid(object):
 	def valid_items_limit(cls, values_list, target_items, table_dict, table_name, curr_database):
 		'''
 		values_list:		插入数据列表	(values中指定的内容)
-		target_items:	字段列表
-		table_dict:		数据字典
+		target_items:		字段列表
+		table_dict:			数据字典
 		'''
 		if len(values_list) != len(target_items):
 			print('插入数据数量与字段数不匹配')

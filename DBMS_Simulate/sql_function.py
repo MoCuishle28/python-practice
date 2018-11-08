@@ -98,8 +98,6 @@ class SQL_Func(object):
 	# 创建Table 添加各种约束
 	@classmethod 
 	def createTable(cls, command_str):
-		is_not_key_word = lambda x: x not in cls.key_word and 'char' not in x and 'int' not in x
-		is_key_word = lambda x: x in cls.key_word or 'char' in x or 'int' in x
 		# create table t(id int(11) notnull auto_increment, name char(20) notnull, primary_key(id));
 		result = re.match(r'create table (?P<name>\w+)\((?P<permission>.+)\)$', command_str)
 		if not result:
@@ -114,33 +112,10 @@ class SQL_Func(object):
 		permission = []
 		for x in tmp_arr:
 			permission.append(x.split())
-		table_dict = {}		# 创建表的数据字典
-
-		for index,x in enumerate(permission):
-			if 'primary_key' in x[0]:
-				key_list = re.findall(r'[(](.*?)[)]', x[0])
-				key_list = key_list[0].split('/') if key_list else []
-				table_dict['primary_key'] = key_list;	# 主键可能有多个
-				continue
-
-			field_name = filter(is_not_key_word, x)	# 得到一个符合 is_not_key_word 要求的迭代器
-			tar_name = ''
-			for field in field_name:
-				if field in table_dict:
-					print(field,'属性名重复')
-					return False
-				table_dict[field] = []
-				tar_name = field
-				break
-			# create table c(int(20) number, char(2) id auto_increment, primary_key(id));
-			field_name = tar_name
-			for value in x:
-				if value != field_name and is_key_word(value):	# 不是表名并且是关键字
-					table_dict[field_name].append(value)
-				elif value != field_name and not is_key_word(value):
-					print(value+' 不是关键字')
-					return False
-			table_dict[field_name].append(index)	# 制定当前字段在数据表的第几列
+		# table_dict = {}		# 创建表的数据字典
+		table_dict = Helper.create_table_dict(permission, cls.key_word)
+		if table_dict == False:
+			return False
 					
 		Helper.add_to_database_dict(name, cls.curr_database, cls.tables_set)	# 把表名写入对应数据库的数据字典
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.json', 'w') as f:
@@ -161,21 +136,29 @@ class SQL_Func(object):
 		table_name = result.group('table_name')
 		alter_type = result.group('alter_type')
 		operate = result.group('operate')
-		operates = operate.split()
-		field_name = operate[0]
+		operates_list = operate.split()
+		field_name = operates_list[0]
 
 		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
 			table_dict = json.load(f)
-
 		if table_name not in cls.tables_set:
 			print(table_name, '不存在')
 			return False
 		if alter_type == 'add':
-			Helper.add_field(table_dict)	# 添加字段 	TODO
+			if field_name in table_dict:
+				print(field_name, '字段已经存在')
+				return False
+			Helper.add_field(table_name, table_dict, operates_list)		# 添加字段
 		elif alter_type == 'drop':
-			Helper.drop_field(table_dict)	# 删除字段	TODO
+			if field_name not in table_dict:
+				print(field_name, '字段不存在')
+				return False
+			Helper.drop_field(table_name, table_dict, operates_list)	# 删除字段
 		elif alter_type == 'modify':
-			Helper.modify_field(table_dict)	# 修改字段	TODO
+			if field_name not in table_dict:
+				print(field_name, '字段不存在')
+				return False
+			Helper.modify_field(table_name, table_dict, operates_list)	# 修改字段
 		else:
 			print(alter_type, '操作不存在')
 			return False
