@@ -9,6 +9,7 @@ import json
 
 from config import db_path, dict_path
 from valid import Valid
+from helper import Helper
 
 
 def load_database():
@@ -125,13 +126,14 @@ class SQL_Func(object):
 			field_name = filter(is_not_key_word, x)	# 得到一个符合 is_not_key_word 要求的迭代器
 			tar_name = ''
 			for field in field_name:
+				if field in table_dict:
+					print(field,'属性名重复')
+					return False
 				table_dict[field] = []
 				tar_name = field
 				break
+			# create table c(int(20) number, char(2) id auto_increment, primary_key(id));
 			field_name = tar_name
-			if field_name in table_dict:
-				print(field_name,'属性名重复')
-				return False
 			for value in x:
 				if value != field_name and is_key_word(value):	# 不是表名并且是关键字
 					table_dict[field_name].append(value)
@@ -140,7 +142,7 @@ class SQL_Func(object):
 					return False
 			table_dict[field_name].append(index)	# 制定当前字段在数据表的第几列
 					
-		cls.add_to_database_dict(name)	# 把表名写入对应数据库的数据字典
+		Helper.add_to_database_dict(name, cls.curr_database, cls.tables_set)	# 把表名写入对应数据库的数据字典
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.json', 'w') as f:
 			json.dump(table_dict, f)
 		with open(db_path + '\\' + cls.curr_database + '\\'+name+'.db', 'w') as f:
@@ -161,15 +163,19 @@ class SQL_Func(object):
 		operate = result.group('operate')
 		operates = operate.split()
 		field_name = operate[0]
+
+		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+
 		if table_name not in cls.tables_set:
 			print(table_name, '不存在')
 			return False
 		if alter_type == 'add':
-			pass
+			Helper.add_field(table_dict)	# 添加字段 	TODO
 		elif alter_type == 'drop':
-			pass
+			Helper.drop_field(table_dict)	# 删除字段	TODO
 		elif alter_type == 'modify':
-			pass
+			Helper.modify_field(table_dict)	# 修改字段	TODO
 		else:
 			print(alter_type, '操作不存在')
 			return False
@@ -233,11 +239,3 @@ class SQL_Func(object):
 		print('bye!')
 		exit()
 		return True
-
-
-	# 添加数据库名字到对应数据库的数据字典中
-	@classmethod
-	def add_to_database_dict(cls, table_name):
-		with open(db_path+'\\'+cls.curr_database+'\\'+'tables.dict', 'a') as f:
-			f.write('\n'+table_name)
-		cls.tables_set.add(table_name)
