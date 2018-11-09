@@ -179,7 +179,6 @@ class SQL_Func(object):
 		return False
 
 
-
 	@classmethod
 	def drop(cls, command_str):
 		'''
@@ -204,12 +203,12 @@ class SQL_Func(object):
 				return False
 			Helper.drop_table(cls.curr_database, name, cls.tables_set)
 		elif operate_type == 'index':
+			# TODO 删除索引
 			pass
 		else:
 			print(operate_type, '输入错误')
 			return False	
 		return True
-
 
 
 	@classmethod
@@ -273,6 +272,56 @@ class SQL_Func(object):
 				table_dict = json.load(f)
 			return Helper.delete_with_where(cls.curr_database, table_name, judge_list, table_dict)
 		return True
+
+
+	@classmethod
+	def update(cls, command_str):
+		# update t1 set str2 = 'a' where id >= 3;
+		result = re.match(r'\s*update\s*(?P<table_name>\w+)\s*set\s*(?P<field_name>\w+)\s*=\s*(?P<value>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
+		if not result:
+			result = re.match(r'\s*update\s*(?P<table_name>\w+)\s*set\s*(?P<field_name>\w+)\s*=\s*(?P<value>.+)\s*$', command_str)
+			if not result or not cls.curr_database:
+				print('sql错误')
+				return False
+
+		table_name = result.group('table_name')
+		field_tuple = (result.group('field_name'), result.group('value').strip())
+		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
+
+		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+		if table_name not in cls.tables_set or field_tuple[0] not in table_dict:
+			print(table_name if table_name not in cls.tables_set else field_tuple[0], '不存在')
+			return False
+
+		if judge_list:	# 带 where 的更新
+			Helper.update_with_where(cls.curr_database, table_name, field_tuple, judge_list, table_dict)
+		else:			# 不带 where 的更新
+			Helper.update_without_where(cls.curr_database, table_name, field_tuple, table_dict)
+		return True
+
+
+	@classmethod
+	def select(cls, command_str):
+		# 先匹配有where的
+		result = re.match(r'\s*select\s*(?P<items_list>\w+)\s*from\s*(?P<table_name>\w+)\s*(where)?\s*(?P<judge_list>.*)$', command_str)
+		if not result or not cls.curr_database:
+			print('sql错误')
+			return False
+
+		items_list = result.group('items_list')	# 投影项
+		table_name = result.group('table_name')
+		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
+
+		if table_name not in cls.tables_set:
+			print(table_name, '不存在')
+			return False
+		if judge_list:
+			# TODO 带 where 的查询
+			pass
+		else:
+			# TODO 不带 where 的查询
+			pass
 
 
 	@classmethod

@@ -294,6 +294,11 @@ class Helper(object):
 						if not Valid.valid_type_limit(table_dict, [field], value, 0):
 							raise Exception('属性类型不匹配{},{}'.format(field, value))
 						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict))
+
+			while union_sign_stack and len(result_stack) > 1:
+				set_tuple = (result_stack.pop(), result_stack.pop())
+				result_stack.append(cls.union_calculate(set_tuple, union_sign_stack.pop()))
+
 		except Exception as e:
 			print('sql输入错误', e)
 			raise e
@@ -338,6 +343,69 @@ class Helper(object):
 		# 删除表的所有数据
 		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
 			f.write('')
+
+
+	@classmethod
+	def update_with_where(cls, curr_database, table_name, field_tuple, judge_list, table_dict):
+		'''
+		judge_list:		where 后的判定条件
+		update t1 set str2 = '1' where id >= 3 and id < 6 and str1='a3';
+		'''
+		field_name, value = field_tuple
+		if not Valid.valid_type_limit(table_dict, [field_name], value, 0):
+			print(field_name, ':', value, '不符合类型')
+			return False
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		if judge_list[0] != '(':
+			judge_list = '( '+judge_list+' )'
+
+		change_index = table_dict[field_name][-1]
+		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict)	# 解析出符合条件的行号(从0起)集合
+
+		if ('unique' in table_dict[field_name] or field_name in table_dict['primary_key']) and len(judge_set) > 1:
+			print(field_name, '不能重复')
+			return False
+		if 'notnull' in table_dict[field_name] and value == '':
+			print(field_name, '不能为空')
+			return False
+
+		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
+			for index,item in enumerate(old_data):
+				if index in judge_set:		# 符合条件则修改
+					item[change_index] = value
+				f.write('\n' + str(item) + ';')
+		print('受影响元组数', len(judge_set))
+
+
+	@classmethod
+	def update_without_where(cls, curr_database, table_name, field_tuple, table_dict):
+		field_name, value = field_tuple
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		if not Valid.valid_type_limit(table_dict, [field_name], value, 0):
+			print(field_name, ':', value, '不符合类型')
+			return False
+		if ('unique' in table_dict[field_name] or field_name in table_dict['primary_key']) and len(old_data) > 1:
+			print(field_name, '不能重复')
+			return False
+		if 'notnull' in table_dict[field_name] and value == '':
+			print(field_name, '不能为空')
+			return False
+		index = table_dict[field_name][-1]
+		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
+			for item in old_data:
+				item[index] = value
+				f.write('\n' + str(item) + ';')
+
+
+	# 把文件中的数据读入到old_data二维表 并对其规范化
+	@classmethod
+	def load_old_data_in_list(cls, curr_database, table_name, table_dict):
+		with open(db_path + '\\' + curr_database + '\\' + table_name + '.db', 'r') as f:
+			old_data = f.read().strip().replace('\n','').split(';')
+			old_data = [item.replace('\'','') for item in old_data]
+			old_data.pop()
+			old_data = Valid.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
+		return old_data
 
 
 	# 加载数据库集合

@@ -34,9 +34,11 @@ while Keep:
 	command += ' ' + input(SQL_Func.curr_database + '> ')
 	command = command.strip()
 
-	if command[-1] == ';':
+	if command and command[-1] == ';':
 		command = command.replace(';','')
 		command_str = command
+		if not command:
+			continue
 	else:
 		print('--> ', end='')
 		continue
