@@ -162,7 +162,7 @@ class SQL_Func(object):
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
-			table_dict = Helper.drop_field(table_name, table_dict, operates_list, cls.key_word, cls.curr_database)	# 删除字段
+			table_dict = Helper.drop_field(table_name, table_dict, operates_list, cls.key_word, cls.curr_database, cls.tables_set)	# 删除字段
 		elif alter_type == 'modify':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
@@ -202,8 +202,7 @@ class SQL_Func(object):
 			if name not in cls.tables_set:
 				print(name, '不存在')
 				return False
-			Helper.drop_table(cls.curr_database, name)
-			cls.tables_set.remove(name)
+			Helper.drop_table(cls.curr_database, name, cls.tables_set)
 		elif operate_type == 'index':
 			pass
 		else:
@@ -252,6 +251,27 @@ class SQL_Func(object):
 				f.write('\n' + str(values_list) + ';')
 		else:
 			return False
+		return True
+
+
+	@classmethod
+	def delete(cls, command_str):
+		result = re.match(r'\s*delete\s*from\s*(?P<table_name>\w+)\s*(where)?\s*(?P<judge_list>.*)$', command_str)
+		if not result or not cls.curr_database:
+			print('sql错误')
+			return False
+		table_name = result.group('table_name')
+		judge_list = result.group('judge_list')
+		if table_name not in cls.tables_set:
+			print(table_name, '不存在')
+			return False
+			
+		if 'where' not in command_str:
+			Helper.delete_without_where(cls.curr_database, table_name)
+		elif 'where' in command_str:
+			with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
+				table_dict = json.load(f)
+			return Helper.delete_with_where(cls.curr_database, table_name, judge_list, table_dict)
 		return True
 
 

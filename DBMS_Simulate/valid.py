@@ -35,7 +35,7 @@ class Valid(object):
 			for k,v in table_dict.items():
 				if 'notnull' in v:
 					target_items.append(k)
-		return cls.valid_items_limit(values_list, target_items, table_dict, table_name, curr_database)		
+		return cls.valid_items_limit(values_list, target_items, table_dict, table_name, curr_database)
 
 
 	# 找到自动增长的当前值
@@ -65,9 +65,9 @@ class Valid(object):
 			old_data.pop()
 			old_data = cls.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
 
-		# 对空值进行判定
 		index = 0
 		cls.form_values_list(values_list, table_dict)	# 把values_list中的int float进行转换
+		# 对空值进行判定
 		for k,v in table_dict.items():
 			if k == 'primary_key':
 				continue
@@ -134,6 +134,8 @@ class Valid(object):
 		'''
 		return:		返回一个二维表
 		'''
+		if old_data == []:
+			return []
 		ret = []
 		for item in old_data:
 			item = item.replace('[', '')

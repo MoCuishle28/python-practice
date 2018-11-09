@@ -109,13 +109,12 @@ class Helper(object):
 
 
 	@classmethod
-	def drop_field(cls, table_name, table_dict, operates_list, key_word, curr_database):
+	def drop_field(cls, table_name, table_dict, operates_list, key_word, curr_database, tables_set):
 		'''
 		删除字段
 		operates_list:	字段名
 		return:			修改后的数据字典	/ False
 		'''
-
 		# 删除数据中对应字段的数据项
 		cls.delete_field_data(curr_database, table_name, table_dict, operates_list[0])
 		del table_dict[operates_list[0]]
@@ -123,9 +122,9 @@ class Helper(object):
 			table_dict.get('primary_key', []).remove(operates_list[0])
 			if table_dict.get('primary_key', []) == []:
 				del table_dict['primary_key']
-			if table_dict == {}:
-				# 删除表	TODO
-				pass
+		if not table_dict:	# 若已经删除所有字段 则删除表
+			cls.drop_table(curr_database, table_name, tables_set)
+			return False
 
 		index = 0
 		for k,v in table_dict.items():
@@ -194,7 +193,7 @@ class Helper(object):
 
 
 	@classmethod
-	def drop_table(cls, curr_database, table_name):
+	def drop_table(cls, curr_database, table_name, tables_set):
 		with open(db_path + '\\' + curr_database + '\\tables.dict', 'r') as f:
 			tables_list = f.read().split()
 		tables_list.remove(table_name)
@@ -203,6 +202,142 @@ class Helper(object):
 				f.write('\n'+x)
 		os.remove(db_path + '\\' + curr_database + '\\'+table_name+'.json')
 		os.remove(db_path + '\\' + curr_database + '\\'+table_name+'.db')
+		tables_set.remove(table_name)
+
+
+	@classmethod
+	def calculate(cls, var_tuple, sign, old_data, table_dict):
+		'''
+		按照布尔计算得出结果集合
+		return:		行号的集合(set)
+		'''
+		sign_set = {'<':lambda v1,v2: v1<v2, '>':lambda v1,v2: v1>v2,
+					'=':lambda v1,v2: v1==v2, '!=':lambda v1,v2: v1!=v2,
+					'<=':lambda v1,v2: v1<=v2, '>=':lambda v1,v2: v1>=v2,
+					'in':lambda v,s: v in s, 'notin':lambda v,s: v not in s}
+
+		field_name, value = var_tuple
+		if 'select' in value:
+			# TODO 先用 select 函数得到结果集
+			pass
+		else:
+			value = cls.form_value(table_dict, field_name, value)
+		judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
+		index = table_dict[field_name][-1]	# 字段在哪一列s
+		ret = set()
+		for line_num, item in enumerate(old_data):
+			if judge_func(item[index], value):
+				ret.add(line_num)
+		return ret
+
+
+	@classmethod
+	def union_calculate(cls, set_tuple, sign):
+		'''
+		对两个集合进行 并, 交 运算	| -> 并集 ,  & -> 交集
+		return:		行号的集合(set)
+		'''
+		s1, s2 = set_tuple
+		return s1 & s2 if sign == 'and' else s1 | s2
+
+
+	@classmethod
+	def parse_where_judge(cls, judge_list, old_data, table_dict):
+		'''
+		解析where后面的字符串 并计算得出结果
+		judge_list:	where后的字符串
+		return:		计算结果 一个集合	(元素为符合条件的数据元组行号)? / False
+		'''
+		calculate_set = {'>', '<', '=', '!=', '>=', '<=', 'in', 'notin', 'exist', 'not'}
+		union_set = {'and', 'or'}
+		var_stack = []				# 存待计算变量的栈	如：id > 1 的 id,1
+		calculate_sign_stack = []	# 存计算符号的栈		如：>, in, !=, not in 等
+		union_sign_stack = []		# 存集合运算的栈		如：and, or
+		result_stack = []			# 存计算结果	元素为集合(set)
+
+		# 加上空格 方便分割
+		for item in calculate_set | union_set | {'(',')'}:
+			judge_list = judge_list.replace(item, ' '+item+' ')
+		judge_list = judge_list.split()
+		size = len(judge_list)
+		for i,x in enumerate(judge_list):
+			if i+1 < size and judge_list[i] in calculate_set and judge_list[i+1] in calculate_set:
+				judge_list[i] = judge_list[i] + judge_list[i+1]
+				judge_list.pop(i+1)
+		# 进行运算
+		try:
+			for item in judge_list:
+				if item == '(':
+					var_stack.append(item)
+				elif item in calculate_set:
+					calculate_sign_stack.append(item)
+				elif item in union_set:
+					union_sign_stack.append(item)
+				elif item == ')':
+					# 集合计算
+					if var_stack[-1] != '(':
+						print('sql输入错误')
+						return False
+					else:
+						var_stack.pop()
+						if union_sign_stack != []:
+							set_tuple = (result_stack.pop(), result_stack.pop())	# 待计算的集合
+							result_stack.append(cls.union_calculate(set_tuple, union_sign_stack.pop()))
+				else:	# 否则为field, value 或者 feild in (select...)
+					var_stack.append(item)
+					if calculate_sign_stack != []:
+						# 计算 并放入 result_stack中
+						value = var_stack.pop()
+						field = var_stack.pop()
+						if field not in table_dict or field == 'primary_key':
+							raise Exception('属性不存在{}'.format(field))
+						if not Valid.valid_type_limit(table_dict, [field], value, 0):
+							raise Exception('属性类型不匹配{},{}'.format(field, value))
+						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict))
+		except Exception as e:
+			print('sql输入错误', e)
+			raise e
+
+		if len(result_stack) != 1 or var_stack != [] or calculate_sign_stack != [] or union_sign_stack != []:
+			print('sql输入错误')
+			return False
+		return result_stack.pop()
+
+
+	@classmethod
+	def delete_with_where(cls, curr_database, table_name, judge_list, table_dict):
+		'''
+		delete from t where id = 3
+		delete from t where id >3 or ( name = 'a0' or ( name = 'a1' and id= 1));
+		delete from t where id >= 4 or ( (id <= 2 and name = 'a2') or (id=1 and name='a1') );
+		TODO 加上 in (select ...) 的嵌套
+		'''
+		with open(db_path + '\\' + curr_database + '\\' + table_name + '.db', 'r') as f:
+			old_data = f.read().strip().replace('\n','').split(';')
+			old_data = [item.replace('\'','') for item in old_data]
+			old_data.pop()
+			old_data = Valid.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
+		if judge_list[0] != '(':
+			judge_list = '( '+judge_list+' )'
+
+		# 分析where中的内容 得到行号集合
+		try:
+			del_index_set = cls.parse_where_judge(judge_list, old_data, table_dict)
+			with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
+				for index,item in enumerate(old_data):
+					if index not in del_index_set:
+						f.write('\n' + str(item) + ';')
+				print('受影响元组数', len(del_index_set))
+		except Exception as e:
+			return False
+		return True
+
+
+	@classmethod
+	def delete_without_where(cls, curr_database, table_name):
+		# 删除表的所有数据
+		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
+			f.write('')
 
 
 	# 加载数据库集合
@@ -219,3 +354,20 @@ class Helper(object):
 		with open(db_path+'\\'+curr_database+'\\'+'tables.dict', 'a') as f:
 			f.write('\n'+table_name)
 		tables_set.add(table_name)
+
+
+	@classmethod
+	def form_value(cls, table_dict, field_name, value):
+		for judge in table_dict[field_name]:
+			if type(judge) is not str:
+				continue
+			elif 'int' in judge:
+				value = int(value)
+				break
+			elif 'float' in judge:
+				value = float(value)
+				break
+			elif 'char' in judge:
+				value = value.replace('\'', '')
+				break
+		return value
