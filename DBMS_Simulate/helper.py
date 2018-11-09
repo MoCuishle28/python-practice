@@ -446,6 +446,21 @@ class Helper(object):
 		cls.project(table_dict, old_data, items_list)
 
 
+	@classmethod
+	def describe_table(cls, curr_database, table_name):
+		with open(db_path + '\\' + curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+		print('----------------')
+		print('Tabel: ', table_name)
+		print('----------------')
+		for k,v in table_dict.items():
+			value = str(v)
+			value = value.replace('[', '')
+			value = value.replace(']', '')
+			print(k+':   ', value)
+		print('----------------')
+
+
 	# 把文件中的数据读入到old_data二维表 并对其规范化
 	@classmethod
 	def load_old_data_in_list(cls, curr_database, table_name, table_dict):

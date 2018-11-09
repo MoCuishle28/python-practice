@@ -334,6 +334,26 @@ class SQL_Func(object):
 
 
 	@classmethod
+	def describe(cls, command_str):
+		# describe table t1;
+		result = re.match(r'\s*describe\s*(?P<desc_type>\w+)\s*(?P<name>\w+)\s*$', command_str)
+		# result = re.match(r'\s*show\s*databases\s*$', command_str)
+		if not result or not cls.curr_database:
+			print('sql错误')
+			return False
+
+		desc_type = result.group('desc_type')
+		if desc_type == 'table':
+			table_name = result.group('name')
+			if table_name not in cls.tables_set:
+				print(table_name, '表不存在')
+			Helper.describe_table(cls.curr_database, table_name)	# 显示表结构
+		else:
+			print(desc_type, '未知操作')
+			return False
+		return True
+
+	@classmethod
 	def cls(cls, command_str):
 		if not re.match(r'\s*cls\s*$', command_str):
 			return False
