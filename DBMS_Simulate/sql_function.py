@@ -303,25 +303,34 @@ class SQL_Func(object):
 
 	@classmethod
 	def select(cls, command_str):
-		# 先匹配有where的
-		result = re.match(r'\s*select\s*(?P<items_list>\w+)\s*from\s*(?P<table_name>\w+)\s*(where)?\s*(?P<judge_list>.*)$', command_str)
-		if not result or not cls.curr_database:
-			print('sql错误')
-			return False
+		# 先匹配有where的  
+		# select str1,str2 from t1;
+		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
+		if not result:
+			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)
+			if not result or not cls.curr_database:
+				print('sql错误')
+				return False
 
-		items_list = result.group('items_list')	# 投影项
+		items_list = [item.strip() for item in result.group('items_list').split(',')]		# 投影项
 		table_name = result.group('table_name')
 		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
 
 		if table_name not in cls.tables_set:
-			print(table_name, '不存在')
+			print(table_name, '表不存在')
 			return False
-		if judge_list:
-			# TODO 带 where 的查询
-			pass
-		else:
-			# TODO 不带 where 的查询
-			pass
+		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+		for item in items_list:
+			if item != '*' and (item not in table_dict or item == 'primary_key'):
+				print(item, '字段不存在')
+				return False
+
+		if judge_list:	# 带 where 的查询
+			Helper.select_with_where(cls.curr_database, table_name, table_dict, items_list, judge_list)
+		else:	# 不带 where 的查询
+			Helper.select_without_where(cls.curr_database, table_name, table_dict, items_list)
+		return True
 
 
 	@classmethod

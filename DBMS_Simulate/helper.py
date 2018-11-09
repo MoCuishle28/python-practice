@@ -397,6 +397,55 @@ class Helper(object):
 				f.write('\n' + str(item) + ';')
 
 
+	@classmethod
+	def project(cls, table_dict, data, items_list):
+		'''
+		投影操作
+		items_list:		需要投影的字段
+		'''
+		project_index = []
+		if items_list[-1] == '*':
+			items_list.pop()
+			for k in table_dict.keys():
+				if k != 'primary_key':
+					items_list.append(k)
+
+		print('------------')
+		for item in items_list:
+			print(item, end='  ')
+			project_index.append(table_dict[item][-1])
+		print()
+		print('------------')
+		for item in data:
+			for index in project_index:
+				print(item[index], end='  ')
+			print()
+		print('------------')
+
+
+	@classmethod
+	def select_with_where(cls, curr_database, table_name, table_dict, items_list, judge_list):
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		if judge_list[0] != '(':
+			judge_list = '( '+judge_list+' )'
+		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict)
+		project_data = []
+		for i,item in enumerate(old_data):
+			if i in judge_set:
+				project_data.append(item)
+		print('------------')
+		print('Table:', table_name)
+		cls.project(table_dict, project_data, items_list)
+
+
+	@classmethod
+	def select_without_where(cls, curr_database, table_name, table_dict, items_list):
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		print('------------')
+		print('Table:', table_name)
+		cls.project(table_dict, old_data, items_list)
+
+
 	# 把文件中的数据读入到old_data二维表 并对其规范化
 	@classmethod
 	def load_old_data_in_list(cls, curr_database, table_name, table_dict):
