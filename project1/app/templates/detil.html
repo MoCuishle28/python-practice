@@ -54,7 +54,7 @@
 			{% if username %}
 			<form action="{{url_for('web.detil', book_id=book['id'])}}" method="post">
 				<button class="btn btn-primary" name="give_book">赠送</button>
-				<button class="btn btn-primary" name="wish_book">添加到心愿</button>
+				<button class="btn btn-primary" name="wish_book">喜欢</button>
 				<p style="color: red">{{message}}</p>
 			</form>
 			{% endif %}

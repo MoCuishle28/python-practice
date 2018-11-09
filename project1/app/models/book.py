@@ -39,3 +39,37 @@ class Book(object):
 		cur.close()
 		conn.close()
 		return ret
+
+
+	@classmethod
+	def get_count_book(cls):
+		# 按照喜欢次数统计倒叙
+		sql = 'select * from book order by count desc;'
+		conn = pool.connection()
+		cur = conn.cursor()
+		cur.execute(sql)
+		ret = [ dict(zip([ k[0] for k in cur.description ], row))
+				for row in cur.fetchall() ]		# 多条数据 用list
+		cur.close()
+		conn.close()
+		return ret
+
+
+	@classmethod
+	def add_count(cls, old_count, book_id):
+		ret = True
+		try:
+			sql = 'update book set count = %s where id={};'.format(book_id)
+			print(sql)
+			conn = pool.connection()
+			cur = conn.cursor()
+			cur.execute(sql, (old_count+1, ))
+			conn.commit()
+		except Exception as e:
+			print('Book Update Error', e)
+			ret = False
+			conn.rollback()	# 一条sql失败 则全部都不会提交
+		finally:
+			cur.close()
+			conn.close()
+		return ret

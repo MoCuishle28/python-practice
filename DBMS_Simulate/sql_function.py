@@ -42,8 +42,13 @@ class SQL_Func(object):
 
 	@classmethod
 	def show(cls, command_str):
-		result = re.match(r'\s*show\s*databases\s*$', command_str)
-		if result:
+		# result = re.match(r'\s*show\s*databases\s*$', command_str)
+		result = re.match(r'\s*show\s*(?P<show_type>\w+)\s*$', command_str)
+		if not result:
+			print('sql错误')
+			return False
+		show_type = result.group('show_type')
+		if show_type == 'databases':
 			print('----------')
 			print('Databases:')
 			print('----------')
@@ -51,9 +56,12 @@ class SQL_Func(object):
 				print('(NULL)')
 			for item in cls.database_set:				
 				print(item)
-		else:
-			result = re.match(r'\s*show\s*tables\s*$', command_str)
-			if not result:
+		elif show_type == 'tables':
+			# result = re.match(r'\s*show\s*tables\s*$', command_str)
+			# if not result:
+			# 	return False
+			if not cls.curr_database:
+				print('请先选择数据库')
 				return False
 			print('----------')
 			print('Tables:')
@@ -303,8 +311,9 @@ class SQL_Func(object):
 
 	@classmethod
 	def select(cls, command_str):
-		# 先匹配有where的  
+		# 先匹配有where的
 		# select str1,str2 from t1;
+		# 后期还有改成 from 多个表的	TODO
 		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
 		if not result:
 			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)

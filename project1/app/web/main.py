@@ -107,6 +107,8 @@ def detil(book_id):
 				return render_template('detil.html', book=book, username=username, giftList=giftList, wishList=wishList, message=message)				
 			new_wish = Wish(book_id, user_id, 0)
 			new_wish.insert()
+			# TODO 热度+1
+			Book.add_count(book['count'], book['id'])
 			message = '成功添加到你的心愿'
 
 	return render_template('detil.html', book=book, username=username, giftList=giftList, wishList=wishList, message=message)
@@ -261,3 +263,12 @@ def exit():
 	# 退出
 	session['username'] = None
 	return redirect(url_for('web.index'))
+
+
+@web.route('/heart')
+def heart():
+	username = ''
+	books_list = Book.get_count_book()
+	if session.get('username'):
+		username = session.get('username')
+	return render_template('count.html', bookList=books_list, username=username)
