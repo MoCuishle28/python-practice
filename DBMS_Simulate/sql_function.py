@@ -155,25 +155,26 @@ class SQL_Func(object):
 		if table_name not in cls.tables_set:
 			print(table_name, '不存在')
 			return False
-		# alter table t add launched char(10) notnull default launched='0';
+		# alter table b add t3 char(10) notnull default t3='007';
 		if alter_type == 'add':
 			if field_name in table_dict:
 				print(field_name, '字段已经存在')
 				return False
 			# 添加字段				
 			table_dict = Helper.add_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database)
-		# alter table b drop launched;
+		# alter table b drop t3;
 		elif alter_type == 'drop':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
 			table_dict = Helper.drop_field(table_name, table_dict, operates_list, cls.key_word, cls.curr_database, cls.tables_set)	# 删除字段
+		# alter table b modify t3 int(10) notnull default t=1;
 		elif alter_type == 'modify':
 			if field_name not in table_dict:
 				print(field_name, '字段不存在')
 				return False
 			# 修改字段
-			table_dict = Helper.modify_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database)
+			table_dict = Helper.modify_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database, cls.tables_set)
 		else:
 			print(alter_type, '操作不存在')
 			return False

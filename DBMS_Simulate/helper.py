@@ -136,13 +136,15 @@ class Helper(object):
 
 
 	@classmethod
-	def modify_field(cls, table_name, table_dict, operates_list, key_word, default_value, curr_database):
+	def modify_field(cls, table_name, table_dict, operates_list, key_word, default_value, curr_database, tables_set):
 		'''
 		修改字段
 		operates_list:	操作列表(包含：字段名 字段约束)
 		return:			修改后的数据字典	/ False
 		'''
-		pass
+		table_dict = cls.drop_field(table_name, table_dict, operates_list, key_word, curr_database, tables_set)
+		return cls.add_field(table_name, table_dict, operates_list, key_word, default_value, curr_database)
+
 
 
 	@classmethod
