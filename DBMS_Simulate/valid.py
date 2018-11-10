@@ -66,7 +66,7 @@ class Valid(object):
 			old_data = cls.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
 
 		index = 0
-		cls.form_values_list(values_list, table_dict)	# 把values_list中的int float进行转换
+		cls.form_values_list(values_list, table_dict, target_items)	# 把values_list中的int float进行转换
 		# 对空值进行判定
 		for k,v in table_dict.items():
 			if k == 'primary_key':
@@ -156,11 +156,13 @@ class Valid(object):
 
 	# 对待插入数据进行 int 和 float的转换
 	@classmethod
-	def form_values_list(cls, values_list, table_dict):
+	def form_values_list(cls, values_list, table_dict, target_items):
 		ret = []
-		for k,v in table_dict.items():
-			for x in v[:-1]:
-				if 'int' in x and ('\'' not in values_list[v[-1]] and '\"' not in values_list[v[-1]]):
-					values_list[v[-1]] = int(values_list[v[-1]])
-				elif 'float' in x and ('\'' not in values_list[v[-1]] and '\"' not in values_list[v[-1]]):
-					values_list[v[-1]] = float(values_list[v[-1]])
+		for i,field in enumerate(target_items):
+			for item in table_dict.get(field, [])[:-1]:
+				if 'int' in item:
+					values_list[i] = values_list[i].replace('\'','')
+					values_list[i] = int(values_list[i])
+				elif 'float' in item:
+					values_list[i] = values_list[i].replace('\'','')
+					values_list[i] = int(values_list[i])

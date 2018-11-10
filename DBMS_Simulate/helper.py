@@ -50,10 +50,10 @@ class Helper(object):
 			old_data = Valid.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
 
 		del_index = table_dict[delete_field][-1]
-		new_data = filter(lambda item: item.pop(del_index), old_data)	# 过滤原数据
-
+		for x in old_data:
+			x.pop(del_index)
 		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
-			for item in new_data:
+			for item in old_data:
 				f.write('\n' + str(item) + ';')
 
 
@@ -98,13 +98,13 @@ class Helper(object):
 		new_field_dict = cls.create_table_dict([operates_list], key_word)
 		if new_field_dict == False:
 			return False
+		# 为原来的添加默认值
+		cls.set_default_in_old_data(curr_database, table_name, table_dict, new_field)
 
 		for k,v in new_field_dict.items():
 			v[-1] = end_index
 			end_index += 1
 			table_dict[k] = v
-		# 为原来的添加默认值
-		cls.set_default_in_old_data(curr_database, table_name, table_dict, new_field)
 		return table_dict
 
 
@@ -244,6 +244,7 @@ class Helper(object):
 	@classmethod
 	def parse_where_judge(cls, judge_list, old_data, table_dict):
 		'''
+		TODO:	in ( select ... ) 可以先笛卡儿积合并成一个 old_data 再处理
 		解析where后面的字符串 并计算得出结果
 		judge_list:	where后的字符串
 		return:		计算结果 一个集合	(元素为符合条件的数据元组行号)? / False
@@ -260,10 +261,11 @@ class Helper(object):
 			judge_list = judge_list.replace(item, ' '+item+' ')
 		judge_list = judge_list.split()
 		size = len(judge_list)
-		for i,x in enumerate(judge_list):
+		for i,x in enumerate(judge_list):	# 把 >=, <=, !=, not in 合并成一个字符串
 			if i+1 < size and judge_list[i] in calculate_set and judge_list[i+1] in calculate_set:
 				judge_list[i] = judge_list[i] + judge_list[i+1]
 				judge_list.pop(i+1)
+
 		# 进行运算
 		try:
 			for item in judge_list:
@@ -424,8 +426,10 @@ class Helper(object):
 
 
 	@classmethod
-	def select_with_where(cls, curr_database, table_name, table_dict, items_list, judge_list):
-		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+	def select_with_where(cls, old_data, table_dict, items_list, judge_list):
+		'''
+		return:		符合条件的列表, 被选择出的字段
+		'''
 		if judge_list[0] != '(':
 			judge_list = '( '+judge_list+' )'
 		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict)
@@ -433,17 +437,7 @@ class Helper(object):
 		for i,item in enumerate(old_data):
 			if i in judge_set:
 				project_data.append(item)
-		print('------------')
-		print('Table:', table_name)
-		cls.project(table_dict, project_data, items_list)
-
-
-	@classmethod
-	def select_without_where(cls, curr_database, table_name, table_dict, items_list):
-		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
-		print('------------')
-		print('Table:', table_name)
-		cls.project(table_dict, old_data, items_list)
+		return project_data, items_list
 
 
 	@classmethod

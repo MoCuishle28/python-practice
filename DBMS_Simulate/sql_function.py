@@ -42,7 +42,6 @@ class SQL_Func(object):
 
 	@classmethod
 	def show(cls, command_str):
-		# result = re.match(r'\s*show\s*databases\s*$', command_str)
 		result = re.match(r'\s*show\s*(?P<show_type>\w+)\s*$', command_str)
 		if not result:
 			print('sql错误')
@@ -57,9 +56,6 @@ class SQL_Func(object):
 			for item in cls.database_set:				
 				print(item)
 		elif show_type == 'tables':
-			# result = re.match(r'\s*show\s*tables\s*$', command_str)
-			# if not result:
-			# 	return False
 			if not cls.curr_database:
 				print('请先选择数据库')
 				return False
@@ -137,6 +133,7 @@ class SQL_Func(object):
 	# alter操作 包含数据表字段的增删改
 	@classmethod
 	def alter(cls, command_str):
+		# alter table t (add/drop)
 		if cls.curr_database == '':
 			print('请先选择数据库')
 			return False
@@ -263,6 +260,7 @@ class SQL_Func(object):
 
 	@classmethod
 	def delete(cls, command_str):
+		# delete from t where...
 		result = re.match(r'\s*delete\s*from\s*(?P<table_name>\w+)\s*(where)?\s*(?P<judge_list>.*)$', command_str)
 		if not result or not cls.curr_database:
 			print('sql错误')
@@ -335,10 +333,13 @@ class SQL_Func(object):
 				print(item, '字段不存在')
 				return False
 
+		old_data = Helper.load_old_data_in_list(cls.curr_database, table_name, table_dict)	# 读取原数据
+		project_data = old_data
+		print('------------')
+		print('Table:', table_name)
 		if judge_list:	# 带 where 的查询
-			Helper.select_with_where(cls.curr_database, table_name, table_dict, items_list, judge_list)
-		else:	# 不带 where 的查询
-			Helper.select_without_where(cls.curr_database, table_name, table_dict, items_list)
+			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list)
+		Helper.project(table_dict, project_data, items_list)
 		return True
 
 
@@ -361,6 +362,7 @@ class SQL_Func(object):
 			print(desc_type, '未知操作')
 			return False
 		return True
+
 
 	@classmethod
 	def cls(cls, command_str):
