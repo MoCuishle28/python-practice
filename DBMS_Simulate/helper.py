@@ -223,14 +223,22 @@ class Helper(object):
 		if 'select' in value:
 			# TODO 先用 select 函数得到结果集
 			pass
+		elif value in table_dict:
+			value_index = table_dict[value][-1]
+			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
+			index = table_dict[field_name][-1]	# 字段在哪一列
+			ret = set()
+			for line_num, item in enumerate(old_data):
+				if judge_func(item[index], item[value_index]):
+					ret.add(line_num)
 		else:
 			value = cls.form_value(table_dict, field_name, value)
-		judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
-		index = table_dict[field_name][-1]	# 字段在哪一列s
-		ret = set()
-		for line_num, item in enumerate(old_data):
-			if judge_func(item[index], value):
-				ret.add(line_num)
+			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
+			index = table_dict[field_name][-1]	# 字段在哪一列
+			ret = set()
+			for line_num, item in enumerate(old_data):
+				if judge_func(item[index], value):
+					ret.add(line_num)
 		return ret
 
 
@@ -297,7 +305,7 @@ class Helper(object):
 						if field not in table_dict or field == 'primary_key':
 							print('{}属性不存在'.format(field))
 							return False
-						if not Valid.valid_type_limit(table_dict, [field], value, 0):
+						if value not in table_dict and not Valid.valid_type_limit(table_dict, [field], value, 0):
 							print('属性类型不匹配{},{}'.format(field, value))
 							return False
 						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict))
@@ -460,7 +468,7 @@ class Helper(object):
 		'''
 		处理 from 后面多个表名（包括 as ,此时需要对数据字典对应的key改名） 读取数据字典, 数据
 		table_name_list:	以 , 分割的数据表名list
-		return:				返回 table_dict_list, old_data_list
+		return:				返回 table_dict_list, old_data_list, 新字段名
 		'''
 		if len(table_name_list) == 1:	# 如果只有一个表 不必笛卡儿积
 			table_name = table_name_list[-1]
@@ -494,6 +502,7 @@ class Helper(object):
 		index = 0
 		tmp_dict = {}
 		new_table_dict_list = []
+		new_field_list = []
 		# 对对应的数据字典 进行字段改名
 		for i,table_dict in enumerate(table_dict_list):
 			del table_dict['primary_key']
@@ -502,14 +511,16 @@ class Helper(object):
 					v[-1] = index
 					index += 1
 					tmp_dict[new_table_name[i]+'.'+k] = v
+					new_field_list.append(new_table_name[i]+'.'+k)
 			else:
 				for k,v in table_dict.items():
 					v[-1] = index
 					index += 1
 					tmp_dict[k] = v
+					new_field_list.append(k)
 			new_table_dict_list.append(tmp_dict)
 			tmp_dict = {}
-		return new_table_dict_list, old_data_list
+		return new_table_dict_list, old_data_list, new_field_list
 
 
 	@classmethod

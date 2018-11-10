@@ -311,8 +311,6 @@ class SQL_Func(object):
 	@classmethod
 	def select(cls, command_str):
 		# 先匹配有where的
-		# select str1,str2 from t1;
-		# 后期还有改成 from 多个表的	TODO
 		# select * from t1 as t,t2 where t.id <= 1 or (s1 = 't2_a2' and id >= 2);  多表查询
 		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
 		if not result or not cls.curr_database:
@@ -326,7 +324,7 @@ class SQL_Func(object):
 		table_name_list = [ x.strip() for x in table_name_list ]
 		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
 
-		table_dict_list,old_data_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set)
+		table_dict_list,old_data_list, new_field_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set)
 
 		if len(table_name_list) > 1:	# 如果有多个表
 			table_dict, old_data = Helper.descartes(table_dict_list, old_data_list)		# 进行笛卡儿积
@@ -334,11 +332,11 @@ class SQL_Func(object):
 			table_dict = table_dict_list
 			old_data = old_data_list
 
-		for item in items_list:
+		# select t.id,t1,t.s1,t2 from b, t1 as t where t.id = t1;
+		for item in new_field_list:
 			if 'count' not in item and item != '*' and (item not in table_dict or item == 'primary_key'):
 				print(item, '字段不存在')
 				return False
-
 		if judge_list:	# 带 where 的查询
 			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list)
 		else:
