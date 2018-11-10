@@ -312,33 +312,35 @@ class SQL_Func(object):
 		# 先匹配有where的
 		# select str1,str2 from t1;
 		# 后期还有改成 from 多个表的	TODO
-		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
-		if not result:
+		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
+		if not result or not cls.curr_database:
 			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)
 			if not result or not cls.curr_database:
 				print('sql错误')
 				return False
 
 		items_list = [item.strip() for item in result.group('items_list').split(',')]		# 投影项
-		table_name = result.group('table_name')
+		table_name_list = result.group('table_name').split(',')
+		table_name_list = [ x.strip() for x in table_name_list ]
 		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
 
-		if table_name not in cls.tables_set:
-			print(table_name, '表不存在')
-			return False
-		with open(db_path + '\\' + cls.curr_database + '\\'+table_name+'.json', 'r') as f:
-			table_dict = json.load(f)
+		table_dict_list,old_data_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set)
+
+		if len(table_name_list) > 1:	# 如果有多个表
+			table_dict, old_data = Helper.descartes(table_dict_list, old_data_list)		# 进行笛卡儿积
+		else:							# 否则单个表处理
+			table_dict = table_dict_list
+			old_data = old_data_list
+
 		for item in items_list:
-			if item != '*' and (item not in table_dict or item == 'primary_key'):
+			if 'count' not in item and item != '*' and (item not in table_dict or item == 'primary_key'):
 				print(item, '字段不存在')
 				return False
 
-		old_data = Helper.load_old_data_in_list(cls.curr_database, table_name, table_dict)	# 读取原数据
-		project_data = old_data
-		print('------------')
-		print('Table:', table_name)
 		if judge_list:	# 带 where 的查询
 			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list)
+		else:
+			project_data = old_data
 		Helper.project(table_dict, project_data, items_list)
 		return True
 
