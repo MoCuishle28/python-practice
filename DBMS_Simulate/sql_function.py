@@ -312,6 +312,7 @@ class SQL_Func(object):
 		# 先匹配有where的
 		# select str1,str2 from t1;
 		# 后期还有改成 from 多个表的	TODO
+		# select * from t1 as t,t2 where t.id <= 1 or (s1 = 't2_a2' and id >= 2);  多表查询
 		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
 		if not result or not cls.curr_database:
 			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)

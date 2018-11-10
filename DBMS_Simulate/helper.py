@@ -459,7 +459,6 @@ class Helper(object):
 		处理 from 后面多个表名（包括 as ,此时需要对数据字典对应的key改名） 读取数据字典, 数据
 		table_name_list:	以 , 分割的数据表名list
 		return:				返回 table_dict_list, old_data_list
-		select * from t1 as t,t2 where t.id <= 1 or (s1 = 't2_a2' and id >= 2);
 		'''
 		if len(table_name_list) == 1:	# 如果只有一个表 不必笛卡儿积
 			table_name = table_name_list[-1]
