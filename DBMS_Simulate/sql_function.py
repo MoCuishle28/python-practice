@@ -325,7 +325,7 @@ class SQL_Func(object):
 		table_name_list = [ x.strip() for x in table_name_list ]
 		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
 
-		table_dict_list,old_data_list, new_field_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set, items_list)
+		table_dict_list,old_data_list,new_field_list, name_to_index, old_table_dict_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set, items_list)
 
 		if len(table_name_list) > 1:	# 如果有多个表
 			table_dict, old_data = Helper.descartes(table_dict_list, old_data_list)		# 进行笛卡儿积
@@ -339,7 +339,7 @@ class SQL_Func(object):
 				print(item, '字段不存在')
 				return False
 		if judge_list:	# 带 where 的查询
-			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list)
+			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, old_table_dict_list)
 		else:
 			project_data = old_data
 		Helper.project(table_dict, project_data, items_list)

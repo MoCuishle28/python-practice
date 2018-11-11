@@ -209,7 +209,7 @@ class Helper(object):
 
 
 	@classmethod
-	def calculate(cls, var_tuple, sign, old_data, table_dict):
+	def calculate(cls, var_tuple, sign, old_data, table_dict, **kw):
 		'''
 		按照布尔计算得出结果集合
 		return:		行号的集合(set)
@@ -220,17 +220,46 @@ class Helper(object):
 					'in':lambda v,s: v in s, 'notin':lambda v,s: v not in s}
 
 		field_name, value = var_tuple
+		name_to_index = kw.get('name_to_index', {})
+		old_data_list = kw.get('old_data_list', [])
+		field_table = kw.get('field_table', '')
+		value_table = kw.get('value_table', '')
+		field_table_dict = kw.get('field_table_dict', {})
+		value_table_dict = kw.get('value_table_dict', {})
+
 		if 'select' in value:
 			# TODO 先用 select 函数得到结果集
 			pass
-		elif value in table_dict:
-			value_index = table_dict[value][-1]
+		elif value in table_dict:				# if value
+
+			out_data = old_data_list[name_to_index[field_table]]		# 外循环数据
+			iner_data = old_data_list[name_to_index[value_table]]			# 内循环
+			if len(out_data) < len(iner_data):						# 让小的数据在内循环
+				out_data, iner_data = iner_data, old_data
+				field_name, value = value, field_name
+				field_table_dict, value_table_dict = value_table_dict, field_table_dict
+
+
 			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
-			index = table_dict[field_name][-1]	# 字段在哪一列
+			index = field_table_dict[field_name][-1]		# 内循环字段在哪一列
+			value_index = value_table_dict[value][-1]		# 外循环字段
+
+			link_list = []	# 选出来的列表合并后放入此列表
+			for x in out_data:
+				for y in iner_data:
+					if judge_func(x[index], y[value_index]):
+						link_list.append(x + y)
+
+			f1 = lambda v1,v2: v1 == v2
+			f2 = lambda v1,v2: set(v1).issubset(set(v2))
+			judge_func = f1 if len(old_data[0]) == len(link_list[0]) else f2
 			ret = set()
 			for line_num, item in enumerate(old_data):
-				if judge_func(item[index], item[value_index]):
-					ret.add(line_num)
+				for judge_item in link_list:
+					# select * from t,t1 as tt where s1 = tt.s1;
+					if judge_func(judge_item, item):
+						ret.add(line_num)
+						break
 		else:
 			value = cls.form_value(table_dict, field_name, value)
 			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
@@ -253,7 +282,7 @@ class Helper(object):
 
 
 	@classmethod
-	def parse_where_judge(cls, judge_list, old_data, table_dict):
+	def parse_where_judge(cls, judge_list, old_data, table_dict, **kw):
 		'''
 		TODO:	in ( select ... ) 也许可以先笛卡儿积合并成一个 old_data 再处理?
 		解析where后面的字符串 并计算得出结果
@@ -266,6 +295,10 @@ class Helper(object):
 		calculate_sign_stack = []	# 存计算符号的栈		如：>, in, !=, not in 等
 		union_sign_stack = []		# 存集合运算的栈		如：and, or
 		result_stack = []			# 存计算结果	元素为集合(set)
+
+		name_to_index = kw.get('name_to_index', {})
+		old_data_list = kw.get('old_data_list', [])
+		table_dict_list = kw.get('table_dict_list', [])
 
 		# 加上空格 方便分割
 		for item in calculate_set | union_set | {'(',')'}:
@@ -308,7 +341,18 @@ class Helper(object):
 						if value not in table_dict and not Valid.valid_type_limit(table_dict, [field], value, 0):
 							print('属性类型不匹配{},{}'.format(field, value))
 							return False
-						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict))
+						field_table = ''
+						value_table = ''
+						field_table_dict = {}
+						value_table_dict = {}
+						for i,td in enumerate(table_dict_list):
+							if field in td:	# 如何获取表名?
+								field_table = name_to_index[i]
+								field_table_dict = td
+							if value in td:
+								value_table = name_to_index[i]
+								value_table_dict = td
+						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, field_table=field_table, value_table=value_table, field_table_dict=field_table_dict, value_table_dict=value_table_dict))
 
 			while union_sign_stack and len(result_stack) > 1:
 				set_tuple = (result_stack.pop(), result_stack.pop())
@@ -447,13 +491,14 @@ class Helper(object):
 
 
 	@classmethod
-	def select_with_where(cls, old_data, table_dict, items_list, judge_list):
+	def select_with_where(cls, old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, table_dict_list):
 		'''
-		return:		符合条件的列表, 被选择出的字段
+		name_to_index:	表名到 old_data_list 位置的映射
+		return:			符合条件的列表, 被选择出的字段
 		'''
 		if judge_list[0] != '(':
 			judge_list = '( '+judge_list+' )'
-		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict)
+		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, table_dict_list=table_dict_list)
 		if judge_set == False:
 			return [], []
 		project_data = []
@@ -464,63 +509,80 @@ class Helper(object):
 
 
 	@classmethod
-	def load_dict_and_data(cls, curr_database, table_name_list, tables_set):
+	def load_dict_and_data(cls, curr_database, table_name_list, tables_set, items_list):
 		'''
 		处理 from 后面多个表名（包括 as ,此时需要对数据字典对应的key改名） 读取数据字典, 数据
 		table_name_list:	以 , 分割的数据表名list
-		return:				返回 table_dict_list, old_data_list, 新字段名
+		return:				返回 table_dict_list, old_data_list, 新字段名, 每个表在old_data_list中的位置
 		'''
 		if len(table_name_list) == 1:	# 如果只有一个表 不必笛卡儿积
 			table_name = table_name_list[-1]
 			if table_name not in tables_set:
 				print(table_name, '表不存在')
-				return [],[]
+				return [], [], [], {}, []
 			with open(db_path + '\\' + curr_database + '\\'+table_name+'.json', 'r') as f:
 				table_dict = json.load(f)
 			old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
-			return table_dict, old_data
+			return table_dict, old_data, items_list, {}, []
 
 		old_table_name = []
 		new_table_name = []
 		table_dict_list = []
 		old_data_list = []
+		map_new_to_old_name = {}		# 新旧表名映射
+		table_name_to_index_map = {}	# 新表名:在old_data_list 中的位置
 		# 取出 as 后面的重命名
 		for table_name in table_name_list:
+			new_name = ''
 			old_table_name.append(table_name.split('as')[0].strip())
 			if old_table_name[-1] not in tables_set:
 				print(old_table_name[-1], '表不存在')
+				return [], [], [], {}, []
 			if 'as' in table_name:
-				table_name = table_name.split('as')[-1].strip()
-			new_table_name.append(table_name)
-		
+				new_name = table_name.split('as')[-1].strip()
+			new_table_name.append(new_name if new_name else table_name.split('as')[0].strip())
+			map_new_to_old_name[table_name.split('as')[0].strip()] = new_name if new_name else table_name.split('as')[0].strip()
+
+		index = 0
 		for name in old_table_name:
 			with open(db_path + '\\' + curr_database + '\\'+ name + '.json', 'r') as f:
 				table_dict = json.load(f)
 			table_dict_list.append(table_dict)		# 放入字典列表
 			old_data_list.append(cls.load_old_data_in_list(curr_database, name, table_dict))	# 放入原数据列表
+			table_name_to_index_map[map_new_to_old_name[name]] = index
+			table_name_to_index_map[index] = map_new_to_old_name[name]
+			index += 1
 
 		index = 0
 		tmp_dict = {}
+		old_new_dict = {}
 		new_table_dict_list = []
 		new_field_list = []
+		old_table_dict_list = []
 		# 对对应的数据字典 进行字段改名
 		for i,table_dict in enumerate(table_dict_list):
 			del table_dict['primary_key']
 			if old_table_name[i] != new_table_name[i]:
 				for k,v in table_dict.items():
-					v[-1] = index
+					tmp_v = v.copy()
+					tmp_v[-1] = index
 					index += 1
-					tmp_dict[new_table_name[i]+'.'+k] = v
+					tmp_dict[new_table_name[i]+'.'+k] = tmp_v
+					old_new_dict[new_table_name[i]+'.'+k] = v
 					new_field_list.append(new_table_name[i]+'.'+k)
 			else:
 				for k,v in table_dict.items():
-					v[-1] = index
+					tmp_v = v.copy()
+					tmp_v[-1] = index
 					index += 1
-					tmp_dict[k] = v
+					tmp_dict[k] = tmp_v
+					old_new_dict[k] = v
 					new_field_list.append(k)
 			new_table_dict_list.append(tmp_dict)
+			old_table_dict_list.append(old_new_dict)	# 维护一个有新名字 和 旧属性的字典列表
 			tmp_dict = {}
-		return new_table_dict_list, old_data_list, new_field_list
+			old_new_dict = {}
+		return new_table_dict_list, old_data_list, new_field_list, table_name_to_index_map, old_table_dict_list
 
 
 	@classmethod
