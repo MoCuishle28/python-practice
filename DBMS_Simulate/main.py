@@ -17,13 +17,13 @@ for sql in sql_os_set:
 
 
 # 输入密码
-# with open(dict_path+'\\user.json', 'r') as f:
-# 	data = json.load(f)
-# 	password = data.get('root').get('password')
-# 	psw = getpass.getpass('password:')
-# 	if not check_password_hash(password, psw):
-# 		print('密码错误!')
-# 		exit()
+with open(dict_path+'\\user.json', 'r') as f:
+	data = json.load(f)
+	password = data.get('root').get('password')
+	psw = getpass.getpass('password:')
+	if not check_password_hash(password, psw):
+		print('密码错误!')
+		exit()
 
 
 Keep = True

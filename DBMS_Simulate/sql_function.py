@@ -312,6 +312,7 @@ class SQL_Func(object):
 	def select(cls, command_str):
 		# 先匹配有where的
 		# select * from t1 as t,t2 where t.id <= 1 or (s1 = 't2_a2' and id >= 2);  多表查询
+		# select s.name,c.name,s from stu as s,course as c,score where sid=s.id and cid = c.id;
 		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
 		if not result or not cls.curr_database:
 			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)
@@ -324,7 +325,7 @@ class SQL_Func(object):
 		table_name_list = [ x.strip() for x in table_name_list ]
 		judge_list = result.group('judge_list') if 'judge_list' in result.groupdict() else ''
 
-		table_dict_list,old_data_list, new_field_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set)
+		table_dict_list,old_data_list, new_field_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set, items_list)
 
 		if len(table_name_list) > 1:	# 如果有多个表
 			table_dict, old_data = Helper.descartes(table_dict_list, old_data_list)		# 进行笛卡儿积

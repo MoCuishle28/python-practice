@@ -66,7 +66,8 @@ class Valid(object):
 			old_data = cls.form_table_data(old_data, table_dict)	# 对读取出来的字符串列表进行规范化处理 组成一个二维列表
 
 		index = 0
-		cls.form_values_list(values_list, table_dict, target_items)	# 把values_list中的int float进行转换
+		if not cls.form_values_list(values_list, table_dict, target_items):	# 把values_list中的int float进行转换
+			return False
 		# 对空值进行判定
 		for k,v in table_dict.items():
 			if k == 'primary_key':
@@ -122,7 +123,7 @@ class Valid(object):
 			if len(value) > limit_size:
 				print(value,'长度大于',limit_size)
 				return False
-		else:
+		elif (tar_item == 'int' and (type(value) is not int or not value.isdigit())) or (tar_item == 'char' and ('\'' not in value or value.isdigit())):
 			print(value,"不是",tar_item,'类型的')
 			return False
 		return True
@@ -160,9 +161,12 @@ class Valid(object):
 		ret = []
 		for i,field in enumerate(target_items):
 			for item in table_dict.get(field, [])[:-1]:
-				if 'int' in item:
+				if 'int' in item and (values_list[i].isnumeric() or values_list[i].isdigit()):
 					values_list[i] = values_list[i].replace('\'','')
 					values_list[i] = int(values_list[i])
+					break
 				elif 'float' in item:
 					values_list[i] = values_list[i].replace('\'','')
 					values_list[i] = int(values_list[i])
+					break
+		return True
