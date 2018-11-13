@@ -8,3 +8,5 @@ delete
 exit
 cls
 insert
+select
+describe
