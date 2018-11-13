@@ -48,7 +48,26 @@ class B_Plus_Tree(object):
 		self.rank = rank
 		self.root = Node(rank)
 		self.link_value = []	# 线性存储索引
-		self.link_index = {} 
+		self.link_index = {}
+
+
+	def search(self, field):
+		'''
+		return:		list -> [index1, index2, ...]
+		'''
+		curr_node = self.root
+		ret = []
+		while not curr_node.is_leaf():
+			go = 0
+			for v in curr_node.value:
+				if v > field:
+					break
+				go += 1
+			curr_node = curr_node.point[go]
+		if field in curr_node.value:
+			index = curr_node.value.index(field)
+			ret = curr_node.index[curr_node.value[index]]
+		return ret
 
 
 	def _split_node(self, node_stack, curr_node):
@@ -179,6 +198,10 @@ class B_Plus_Tree(object):
 		return True
 
 
+	def delect(self, field):
+		pass
+
+
 	def show(self):
 		queue = [self.root]
 		while queue:
@@ -190,11 +213,12 @@ class B_Plus_Tree(object):
 			for point in curr_node.point:
 				queue.append(point)
 		print(self.link_value)
+		print(self.link_index)
 
 
 if __name__ == '__main__':
 	# 测试
-	b_plus_tree = B_Plus_Tree(3)
+	b_plus_tree = B_Plus_Tree(4)
 	b_plus_tree.insert([3,0])
 	b_plus_tree.insert([8,1])
 	b_plus_tree.insert([12,2])
@@ -205,7 +229,11 @@ if __name__ == '__main__':
 	b_plus_tree.insert([28,7])
 	b_plus_tree.insert([30,8])
 	b_plus_tree.show()
-
+	print('---朴实的分割线---')
+	print(8, b_plus_tree.search(8))
+	print(28, b_plus_tree.search(28))
+	print(3, b_plus_tree.search(3))
+	
 	b_plus_tree = B_Plus_Tree(3)
 	index = 0
 	while True:
