@@ -252,7 +252,9 @@ class Helper(object):
 
 			f1 = lambda v1,v2: v1 == v2
 			f2 = lambda v1,v2: set(v1).issubset(set(v2))
-			judge_func = f1 if len(old_data[0]) == len(link_list[0]) else f2
+			# judge_func = f1 if len(old_data[0]) == len(link_list[0]) else f2
+			judge_func = f2
+			
 			ret = set()
 			for line_num, item in enumerate(old_data):
 				for judge_item in link_list:

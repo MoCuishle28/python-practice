@@ -3,134 +3,213 @@ B+ 数
 '''
 
 
-class Leaf(object):
-	'''叶节点'''
+class Node(object):
+	'''节点'''
 	def __init__(self, rank):
-		self.rank = rank
-		self.block_index = []	# 盘块(每个元素为 [field, index1, index2] 列表 )
-	
-
-	def isFull(self):
-		return len(self.block_index) >= self.rank
+		self.rank = rank	# 秩 (每个节点包含值的个数)
+		self.value = []		# 值域	每个元素为 field
+		self.index = {}		# 用于找到field对应的index    key:value -> field:[index1, index2, ...]
+		self.point = []		# 指针域
 
 
-class Index(object):
-	'''索引节点'''
-	def __init__(self, rank):
-		self.rank = rank
-		self.index = []		# 索引域
-		self.point = [Leaf(rank) for _ in range(rank)]		# 指针域
+	def is_leaf(self):
+		return self.point == []
 
 
-	def insert(self, element):
-		pass
+	def is_full(self):
+		return len(self.value) >= self.rank
 
 
-	def isFull(self):
-		return len(self.index) >= self.rank
+	def insert_element(self, element):
+		'''插入当前节点'''
+		if type(element) is not list or len(element) != 2:
+			return False
+		field, index = element
+		tar_i = 0
+		for v in self.value:
+			if v > field:
+				break
+			elif v == field:
+				tar_i = -1
+				break
+			tar_i += 1
 
-
-	def have_leaf(self):
-		'''
-		判断是否有叶节点:
-			if 		指针域为Leaf then 有待插入的叶节点
-			else 	指针域指向索引节点
-		'''
-		return True if type(self.point[0]) is Leaf else False
+		if tar_i == -1:	# 原来已经有
+			self.index[field].append(index)
+		else:
+			self.value.insert(tar_i, field)
+			self.index[field] = [index]
+		return True
 
 
 class B_Plus_Tree(object):
-			
+
 	def __init__(self, rank):
-		self.rank = rank				# 秩(一个叶节点能存的元素个数 + 1)
-		self.index_page = Index(rank)	# 索引节点
-		self.link = []					# 所有叶节点
+		self.rank = rank
+		self.root = Node(rank)
+		self.link_value = []	# 线性存储索引
+		self.link_index = {} 
+
+
+	def _split_node(self, node_stack, curr_node):
+		'''
+		node_stack:		节点栈, 找到当前节点所走过的节点
+		curr_node:		当前节点
+		'''
+		if node_stack == [] and curr_node.is_leaf() and curr_node == self.root:
+			curr_node_len = len(curr_node.value)
+			left_list, right_list = curr_node.value[:curr_node_len//2], curr_node.value[curr_node_len//2:]	# 拆分
+			middle_value = curr_node.value[curr_node_len//2]
+			curr_node.value.clear()
+			curr_node.value.append(middle_value)
+
+			left_node = Node(self.rank)
+			right_node = Node(self.rank)
+			left_node.value = left_list
+			right_node.value = right_list
+
+			for v in left_node.value:
+				left_node.index[v] = curr_node.index[v]
+			for v in right_node.value:
+				right_node.index[v] = curr_node.index[v]
+			curr_node.index.clear()
+			curr_node.point.append(left_node)
+			curr_node.point.append(right_node)
+		elif node_stack != [] and curr_node.is_leaf():
+			left_node = Node(self.rank)
+			right_node = Node(self.rank)
+			curr_node_len = len(curr_node.value)
+			left_node.value, right_node.value = curr_node.value[:curr_node_len//2], curr_node.value[curr_node_len//2:]	# 拆分
+			middle_value = curr_node.value[curr_node_len//2]
+
+			# 设置dict
+			for v in left_node.value:
+				left_node.index[v] = curr_node.index[v]
+			for v in right_node.value:
+				right_node.index[v] = curr_node.index[v]
+
+			pre_node = node_stack.pop()
+			for i,point in enumerate(pre_node.point):
+				if point == curr_node:
+					pre_node.value.insert(i, middle_value)
+					pre_node.point[i] = left_node
+					pre_node.point.insert(i+1, right_node)
+					break
+			if pre_node.is_full():
+				self._split_node(node_stack, pre_node)
+		elif node_stack == [] and not curr_node.is_leaf() and curr_node == self.root:
+			left_node = Node(self.rank)
+			right_node = Node(self.rank)
+			curr_node_len = len(curr_node.value)
+			left_node.value, right_node.value = curr_node.value[:curr_node_len//2], curr_node.value[curr_node_len//2+1:]
+			middle_value = curr_node.value[curr_node_len//2]
+			for i,point in enumerate(curr_node.point):
+				if i <= curr_node_len//2:	# 左半部分给	left_node
+					left_node.point.append(point)
+				else:						# 右半部分给	right_node
+					right_node.point.append(point)
+			curr_node.value.clear()
+			curr_node.point.clear()
+			curr_node.value.append(middle_value)
+			curr_node.point.append(left_node)
+			curr_node.point.append(right_node)
+		elif node_stack and not curr_node.is_leaf() and curr_node != self.root:
+			left_node = Node(self.rank)
+			right_node = Node(self.rank)
+			curr_node_len = len(curr_node.value)
+			left_node.value, right_node.value = curr_node.value[:curr_node_len//2], curr_node.value[curr_node_len//2+1:]
+			middle_value = curr_node.value[curr_node_len//2]
+			for i,point in enumerate(curr_node.point):
+				if i <= curr_node_len//2:		# 左半部分给	left_node
+					left_node.point.append(point)
+				else:							# 右半部分给	right_node
+					right_node.point.append(point)
+
+			pre_node = node_stack.pop()
+			for i,point in enumerate(pre_node.point):
+				if point == curr_node:
+					pre_node.value.insert(i, middle_value)
+					pre_node.point[i] = left_node
+					pre_node.point.insert(i+1, right_node)
+					break
+			if pre_node.is_full():
+				self._split_node(node_stack, pre_node)
 
 
 	def insert(self, element):
 		'''
-		element:	is a list with 2 element, 0 is a field and 1 is a index of file
-		return:		是否插入成功 (bool)
+		element:	每个元素为一个list [field, index]
 		'''
 		if type(element) is not list or len(element) != 2:
 			return False
-		field = element[0]
-		target_index_page = self.index_page
+		field, index = element
+		node_stack = []
+		curr_node = self.root
 
-		if self.index_page.index == []:		# 直接插入
-			self.index_page.index.append(field)
-			self.index_page.point[0].block_index.append(element)
-			return True
-
-		tar_list = []
-		if not target_index_page.have_leaf():	# 找到有叶的索引节点
-			tar_list, target_index_page = self.search(field)	# 第二个返回值为目标叶节点的前一个索引节点
-
-		if tar_list:
-			tar_list.append(element[-1])	# 直接插入
+		if curr_node.is_leaf():
+			curr_node.insert_element(element)
 		else:
-			goto = 0
-			for v in target_index_page.index:
-				if v > field:
-					break
-				goto += 1
-			leaf = target_index_page[goto]
-			have_inserted = False
-			for i,v in enumerate(leaf):
-				if v[0] > field:
-					leaf.insert(i, element[-1])
-					have_inserted = True
-					break
-			if not have_inserted:
-				leaf.append(element[-1])
+			while not curr_node.is_leaf():
+				go = 0
+				for f in curr_node.value:
+					if f > field:
+						break
+					go += 1
 
-		# TODO 调整B+树
+				node_stack.append(curr_node)	# 入栈
+				curr_node = curr_node.point[go]
+			curr_node.insert_element(element)
 
+		if curr_node.is_full():
+			self._split_node(node_stack, curr_node)
 
-	def modify_tree(self):
-		pass
-
-
-	def search(self, field):
-		'''
-		field:		字段名
-		return:		目标列表, 目标叶节点前一个索引节点
-		'''
-		if self.index_page == []:
-			return None, None
-		curr_index_page = self.index_page
-
-		while not curr_index_page.have_leaf():
-			goto = 0
-			for v in curr_index_page.index:
-				if v > field:
-					break
-				goto += 1
-			curr_index_page = curr_index_page.point[goto]
-
-		goto = 0
-		for v in curr_index_page.index:
-			if v > field:
+		go = 0
+		for x in self.link_value:
+			if x > field:
 				break
-			goto += 1
-
-		leaf = curr_index_page.point[goto]
-		tar_list = []
-		for i,v_list in enumerate(leaf):
-			if v_list[0] == field:
-				tar_list = v_list
+			elif x == field:
+				go = -1
 				break
-
-		return tar_list, curr_index_page
+			go += 1
+		if go == -1:
+			self.link_index[field].append(index)
+		else:
+			self.link_value.insert(go, field)
+			self.link_index[field] = [index]
+		return True
 
 
 	def show(self):
-		curr_index_page = self.index_page
-		queue = []
-		
+		queue = [self.root]
+		while queue:
+			curr_node = queue.pop(0)
+			if curr_node.is_leaf():
+				print(curr_node.index)
+			else:
+				print(curr_node.value)
+			for point in curr_node.point:
+				queue.append(point)
+		print(self.link_value)
 
 
 if __name__ == '__main__':
 	# 测试
 	b_plus_tree = B_Plus_Tree(3)
-	print(b_plus_tree.index_page.have_leaf())	# Test
+	b_plus_tree.insert([3,0])
+	b_plus_tree.insert([8,1])
+	b_plus_tree.insert([12,2])
+	b_plus_tree.insert([1,4])
+	b_plus_tree.insert([16,3])
+	b_plus_tree.insert([8,5])
+	b_plus_tree.insert([22,6])
+	b_plus_tree.insert([28,7])
+	b_plus_tree.insert([30,8])
+	b_plus_tree.show()
+
+	b_plus_tree = B_Plus_Tree(3)
+	index = 0
+	while True:
+		field = int(input('>'))
+		b_plus_tree.insert([field, index])
+		b_plus_tree.show()
+		index += 1
