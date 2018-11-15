@@ -53,7 +53,7 @@ class B_Plus_Tree(object):
 		self.fill_factory = self.rank//2	# 填充因子 (大于时能够借用, 小于时需要合并)
 
 
-	def search(self, field):
+	def search_by_node(self, field):
 		'''
 		return:		list -> [index1, index2, ...]
 		'''
@@ -69,7 +69,7 @@ class B_Plus_Tree(object):
 		if field in curr_node.value:
 			index = curr_node.value.index(field)
 			ret = curr_node.index[curr_node.value[index]]
-		return ret
+		return ret.copy()
 
 
 	def _split_node(self, node_stack, curr_node):
@@ -228,7 +228,7 @@ class B_Plus_Tree(object):
 			del self.link_index[field]
 
 		if len(curr_node.value) >= self.fill_factory:	# (1).删除后还满足填充因子(有可能有多条记录 只删了一条)
-			if field not in self.link_index:	# 已经彻底删除了
+			if field not in self.link_index and replace_node and field in replace_node.value:	# 已经彻底删除了
 				replace_node.value[replace_node.value.index(field)] = curr_node.value[0]
 			return True
 		elif node_stack:					# 删除后不满足填充率 并且有父节点
@@ -236,15 +236,15 @@ class B_Plus_Tree(object):
 			bro_node = None
 			for i,point in enumerate(pre_node.point):	# 找到兄弟节点
 				if point == curr_node:
-					if i-1 >= 0 and len(pre_node.point[i].value) >= self.fill_factory:
+					if i-1 >= 0 and len(pre_node.point[i].value) > self.fill_factory:
 						bro_node = pre_node.point[i-1]
-					elif i+1 < len(pre_node.point) and len(pre_node.point[i+1].value) >= self.fill_factory:
+					elif i+1 < len(pre_node.point) and len(pre_node.point[i+1].value) > self.fill_factory:
 						bro_node = pre_node.point[i+1]
 					else:
 						bro_node = pre_node.point[i-1] if i-1 >= 0 else pre_node.point[i+1]
 					break
 
-			if len(bro_node.value) >= self.fill_factory:	# (2).如果兄弟节点有富足
+			if len(bro_node.value) > self.fill_factory:	# (2).如果兄弟节点有富足
 				if pre_node.point.index(bro_node) < pre_node.point.index(curr_node):	# 如果兄弟是左节点
 					# 借左边最大的key 及其对应行号
 					borrow_key = bro_node.value.pop()
@@ -262,9 +262,9 @@ class B_Plus_Tree(object):
 						del bro_node.index[borrow_key]
 					curr_node.value.insert(-1, borrow_key)
 					curr_node.index[borrow_key] = borrow_index
-					pre_node.value[pre_node.point.index(curr_node)] = borrow_key
-
-				replace_node.value[replace_node.value.index(field)] = curr_node.value[0]	# 修改上面索引节点中被删除的key
+					pre_node.value[pre_node.point.index(curr_node)] = bro_node.value[0]
+				if replace_node and replace_node != pre_node and field in replace_node.value:
+					replace_node.value[replace_node.value.index(field)] = curr_node.value[0]	# 修改上面索引节点中被删除的key
 			else:											# (3).兄弟节点没有富足
 				# 合并兄弟节点和当前节点
 				for key in bro_node.value:
@@ -277,6 +277,12 @@ class B_Plus_Tree(object):
 				else:	# 否则兄弟是右节点
 					pre_node.value.pop(pre_node.point.index(curr_node))
 				pre_node.point.remove(bro_node)		# 合并完毕
+				if replace_node and field in replace_node.value:	# 修改上面索引节点中被删除的key
+					replace_node.value[replace_node.value.index(field)] = curr_node.value[0]
+
+				if pre_node == self.root and pre_node.value == []:
+					self.root = curr_node
+					return True
 
 				curr_node = pre_node
 				if len(curr_node.value) >= self.fill_factory:	# (4).若索引节点满足填充因子
@@ -286,28 +292,78 @@ class B_Plus_Tree(object):
 					bro_node = None
 					for i,point in enumerate(pre_node.point):	# 找到兄弟节点
 						if point == curr_node:
-							if i-1 >= 0 and len(pre_node.point[i].value) >= self.fill_factory:
+							if i-1 >= 0 and len(pre_node.point[i].value) > self.fill_factory:
 								bro_node = pre_node.point[i-1]
-							elif i+1 < len(pre_node.point) and len(pre_node.point[i+1].value) >= self.fill_factory:
+							elif i+1 < len(pre_node.point) and len(pre_node.point[i+1].value) > self.fill_factory:
 								bro_node = pre_node.point[i+1]
 							else:
 								bro_node = pre_node.point[i-1] if i-1 >= 0 else pre_node.point[i+1]
 							break
-					if len(bro_node.value) >= self.fill_factory:		# (5).如果兄弟节点有富足
-						curr_node.value.insert(0, pre_node.value.pop())		# 父节点key 下移
-						# 将兄弟节点的子树移动到当前节点
+
+					if len(bro_node.value) > self.fill_factory:		# (5).如果兄弟节点有富足
+						# 将兄弟节点的子树移动到当前节点 且兄弟节点的key借一个给父节点
 						if pre_node.point.index(bro_node) < pre_node.point.index(curr_node):	# 如果兄弟是左节点
 							curr_node.point.insert(0, bro_node.point.pop())
-						else:	# 右节点
+							curr_node.value.insert(0, pre_node.value.pop())		# 父节点key 下移
+							pre_node.value.insert(pre_node.point.index(bro_node), bro_node.value.pop())
+						else:																	# 兄弟节点是右节点
 							curr_node.point.insert(-1, bro_node.point.pop(0))
+							curr_node.value.insert(-1, pre_node.value.pop(0))	# 父节点key 下移
+							pre_node.value.insert(pre_node.point.index(curr_node), bro_node.value.pop(0))
 					else:		# (6).兄弟节点不满足填充因子
 						# 当前节点和兄弟节点以及父节点向下移动一个key组成新节点
-						pass
-				else:	# 索引不满足填充因子 且没有父节点
-					pass
-
+						# 如果父节点有富足 应该是父节点落下一个key 而不是直接和父节点合并
+						if len(pre_node.value) > self.fill_factory:
+							if pre_node.point.index(bro_node) < pre_node.point.index(curr_node):	# 如果兄弟是左节点
+								new_key = pre_node.value.pop(pre_node.point.index(bro_node))
+								bro_node.value.append(new_key)
+								for point in curr_node.point:
+									bro_node.point.append(point)
+								for key in curr_node.value:
+									bro_node.value.append(key)
+								pre_node.point.remove(curr_node)
+							else:																	# 兄弟节点是右节点
+								new_key = pre_node.value.pop(pre_node.point.index(curr_node))
+								bro_node.value.insert(0, new_key)
+								for point in curr_node.point[::-1]:
+									bro_node.point.insert(0, point)
+								for key in curr_node.value[::-1]:
+									bro_node.value.insert(0, key)
+								pre_node.point.remove(curr_node)
+						else:
+							if pre_node.point.index(bro_node) < pre_node.point.index(curr_node):	# 如果兄弟是左节点
+								# curr_node与父节点合并
+								for key in curr_node.value:
+									pre_node.value.append(key)
+								pre_node.point.remove(curr_node)
+								for node in curr_node.point:
+									pre_node.point.append(node)
+								# 兄弟节点与父节点合并
+								for key in bro_node.value[::-1]:
+									pre_node.value.insert(0, key)
+								pre_node.point.remove(bro_node)
+								for node in bro_node.point[::-1]:
+									pre_node.point.insert(0, node)
+							else:																	# 兄弟节点是右节点
+								# curr_node与父节点合并
+								for key in curr_node.value[::-1]:
+									pre_node.value.insert(0, key)
+								pre_node.point.remove(curr_node)
+								for node in curr_node.point[::-1]:
+									pre_node.point.insert(0, node)
+								# 兄弟节点与父节点合并
+								for key in bro_node.value:
+									pre_node.value.insert(0, key)
+								pre_node.point.remove(bro_node)
+								for node in bro_node.point:
+									pre_node.point.append(node)
+				else:	# 索引不满足填充因子 且没有父节点(即已经是root节点)
+					pre_node = curr_node
 		return True
 
+
+	def search_by_dict(self, filed):
+		return self.link_index.get(filed, []).copy()
 
 
 	def save(self, path):
@@ -348,18 +404,57 @@ if __name__ == '__main__':
 	b_plus_tree.insert([12,2])
 	b_plus_tree.insert([1,4])
 	b_plus_tree.insert([16,3])
-	b_plus_tree.insert([8,5])
+	# b_plus_tree.insert([8,5])
 	b_plus_tree.insert([22,6])
 	b_plus_tree.insert([28,7])
 	b_plus_tree.insert([30,8])
 	b_plus_tree.show()
+
 	print('---删除测试---')
-	print('delect [28,7]',b_plus_tree.delect([22,6]))
+	delete_element = [22, 6]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
 	b_plus_tree.show()
 	print('---朴实的分割线---')
-	print('search:',8, b_plus_tree.search(8))
-	print(28, b_plus_tree.search(28))
-	print(3, b_plus_tree.search(3))
+	delete_element = [8, 1]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	delete_element = [12, 2]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	delete_element = [28, 7]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	delete_element = [16, 3]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('====================================')
+
+	print('---朴实的分割线---')
+	delete_element = [3, 0]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	delete_element = [30, 8]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	delete_element = [1, 4]
+	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	b_plus_tree.show()
+
+	print('---朴实的分割线---')
+	print('search_by_node:',8, b_plus_tree.search_by_node(8))
+	print(28, b_plus_tree.search_by_node(28))
+	print(3, b_plus_tree.search_by_node(3))
 
 	print('---朴实的分割线---')
 	# print(b_plus_tree.save('test_json'))
@@ -368,9 +463,22 @@ if __name__ == '__main__':
 	# tmp.show()
 
 	b_plus_tree = B_Plus_Tree(3)
-	index = 0
-	# while True:
-	# 	field = int(input('>'))
-	# 	b_plus_tree.insert([field, index])
-	# 	b_plus_tree.show()
-	# 	index += 1
+	i = 0
+	while True:
+		field = input('>')
+		oper, field = field.split()
+		if oper == 'in':
+			field = int(field)
+			b_plus_tree.insert([field, i])
+			i+=1
+		elif oper == 'del':
+			field = int(field)
+			index = b_plus_tree.search_by_dict(field)
+			if index:
+				print('del:',field, index)
+				print(b_plus_tree.delect([field, index.pop(0)]))
+			else:
+				print('don\'t')
+		elif oper == 'exit':
+			break
+		b_plus_tree.show()
