@@ -307,8 +307,8 @@ class B_Plus_Tree(object):
 							curr_node.value.insert(0, pre_node.value.pop())		# 父节点key 下移
 							pre_node.value.insert(pre_node.point.index(bro_node), bro_node.value.pop())
 						else:																	# 兄弟节点是右节点
-							curr_node.point.insert(-1, bro_node.point.pop(0))
-							curr_node.value.insert(-1, pre_node.value.pop(0))	# 父节点key 下移
+							curr_node.point.append(bro_node.point.pop(0))
+							curr_node.value.append(pre_node.value.pop(0))	# 父节点key 下移
 							pre_node.value.insert(pre_node.point.index(curr_node), bro_node.value.pop(0))
 					else:		# (6).兄弟节点不满足填充因子
 						# 当前节点和兄弟节点以及父节点向下移动一个key组成新节点
