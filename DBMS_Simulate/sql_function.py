@@ -91,8 +91,6 @@ class SQL_Func(object):
 				os.mkdir(db_path + '\\' + name)		# 创建对应文件夹
 				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:
 					f.write('')
-		elif operate_type == 'index':
-			pass
 		elif operate_type == 'user':
 			pass
 		else:	# 已使用数据库 则创建数据表
@@ -175,6 +173,12 @@ class SQL_Func(object):
 				return False
 			# 修改字段
 			table_dict = Helper.modify_field(table_name, table_dict, operates_list, cls.key_word, default_value, cls.curr_database, cls.tables_set)
+		# alter table b index_add t1;
+		elif alter_type == 'index_add':	# 添加索引
+			Helper.add_index(cls.curr_database, table_name, field_name, table_dict)
+		# alter table b index_drop t1;
+		elif alter_type == 'index_drop':
+			Helper.drop_index(cls.curr_database, table_name, field_name, table_dict)
 		else:
 			print(alter_type, '操作不存在')
 			return False

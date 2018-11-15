@@ -10,6 +10,7 @@ import itertools
 
 from config import db_path, dict_path
 from valid import Valid
+from BTree import B_Plus_Tree
 
 
 class Helper(object):
@@ -624,6 +625,29 @@ class Helper(object):
 			value = value.replace(']', '')
 			print(k+':   ', value)
 		print('----------------')
+
+
+	@classmethod
+	def add_index(cls, curr_database, table_name, field_name, table_dict):
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		index_name = '_'+field_name+'_index'
+		table_dict[field_name].insert(-2, index_name)
+		data_col = table_dict[field_name][-1]
+		print(table_dict)
+
+		b_plus_tree = B_Plus_Tree(3)
+		for i,x in enumerate(old_data):
+			b_plus_tree.insert([x[data_col], i])
+
+		b_plus_tree.show()
+		b_plus_tree.save(db_path + '\\' + curr_database + '\\' + table_name)
+
+		exit(0)
+
+
+	@classmethod
+	def drop_index(cls, curr_database, table_name, field_name, table_dict):
+		print(table_dict)
 
 
 	# 把文件中的数据读入到old_data二维表 并对其规范化
