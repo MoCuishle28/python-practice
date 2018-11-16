@@ -200,7 +200,7 @@ class B_Plus_Tree(object):
 		return True
 
 
-	def delect(self, element):
+	def delete(self, element):
 		if len(element) != 2 or element[0] not in self.link_index or element[1] not in self.link_index.get(element[0],[]):
 			return False
 		field, index = element
@@ -260,7 +260,7 @@ class B_Plus_Tree(object):
 					if bro_node.is_leaf():
 						borrow_index = bro_node.index[borrow_key]
 						del bro_node.index[borrow_key]
-					curr_node.value.insert(-1, borrow_key)
+					curr_node.value.append(borrow_key)
 					curr_node.index[borrow_key] = borrow_index
 					pre_node.value[pre_node.point.index(curr_node)] = bro_node.value[0]
 				if replace_node and replace_node != pre_node and field in replace_node.value:
@@ -412,43 +412,43 @@ if __name__ == '__main__':
 
 	print('---删除测试---')
 	delete_element = [22, 6]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 	print('---朴实的分割线---')
 	delete_element = [8, 1]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
 	delete_element = [12, 2]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
 	delete_element = [28, 7]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
 	delete_element = [16, 3]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('====================================')
 
 	print('---朴实的分割线---')
 	delete_element = [3, 0]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
 	delete_element = [30, 8]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
 	delete_element = [1, 4]
-	print('delect', delete_element ,b_plus_tree.delect(delete_element))
+	print('delete', delete_element ,b_plus_tree.delete(delete_element))
 	b_plus_tree.show()
 
 	print('---朴实的分割线---')
@@ -476,7 +476,7 @@ if __name__ == '__main__':
 			index = b_plus_tree.search_by_dict(field)
 			if index:
 				print('del:',field, index)
-				print(b_plus_tree.delect([field, index.pop(0)]))
+				print(b_plus_tree.delete([field, index.pop(0)]))
 			else:
 				print('don\'t')
 		elif oper == 'exit':

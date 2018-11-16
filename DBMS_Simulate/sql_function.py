@@ -11,6 +11,7 @@ import shutil
 from config import db_path, dict_path
 from valid import Valid
 from helper import Helper
+from BTree import B_Plus_Tree
 
 
 class SQL_Func(object):
@@ -260,6 +261,19 @@ class SQL_Func(object):
 				f.write('\n' + str(values_list) + ';')
 		else:
 			return False
+		# 检查有无索引
+		old_data = Helper.load_old_data_in_list(cls.curr_database, table_name, table_dict)
+		for k,v in table_dict.items():
+			for item in v:
+				if type(item) is str and '_index' in item:	# 说明有索引
+					value = values_list[v[-1]]
+					index_name = '_'+table_name+'_'+k+'_index'
+					tree = B_Plus_Tree(3)
+					tree.load(db_path + '\\' + cls.curr_database + '\\' + index_name)
+					tree.insert([value, len(old_data) - 1])
+					tree.show()
+					tree.save(db_path + '\\' + cls.curr_database + '\\' + index_name)
+					break
 		return True
 
 

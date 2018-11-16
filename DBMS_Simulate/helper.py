@@ -292,7 +292,7 @@ class Helper(object):
 		judge_list:	where后的字符串
 		return:		计算结果 一个集合	(元素为符合条件的数据元组行号)? / False
 		'''
-		calculate_set = {'>', '<', '=', '!=', '>=', '<=', 'in', 'notin', 'exist', 'not'}
+		calculate_set = {'>', '<', '=', '!=', '>=', '<=', 'in', 'notin', 'exist', 'not', '!'}
 		union_set = {'and', 'or'}
 		var_stack = []				# 存待计算变量的栈	如：id > 1 的 id,1
 		calculate_sign_stack = []	# 存计算符号的栈		如：>, in, !=, not in 等
@@ -395,7 +395,14 @@ class Helper(object):
 					if index not in del_index_set:
 						f.write('\n' + str(item) + ';')
 				print('受影响元组数', len(del_index_set))
+
+			items = Valid.have_index(table_dict)	# 拿到拥有索引的字段列表
+			if not items or not del_index_set:
+				return True
+			# 调整索引
+			cls.modify_B_Plus_Tree(curr_database, table_name, items, table_dict)
 		except Exception as e:
+			print(e)
 			return False
 		return True
 
@@ -403,6 +410,15 @@ class Helper(object):
 	@classmethod
 	def delete_without_where(cls, curr_database, table_name):
 		# 删除表的所有数据
+		tree = B_Plus_Tree(3)
+		with open(db_path + '\\' + curr_database + '\\'+table_name+'.json', 'r') as f:
+			table_dict = json.load(f)
+		items = Valid.have_index(table_dict)
+		if not items:
+			return
+		for item in items:
+			index_name = index_name = '_'+table_name+'_'+item+'_index'
+			tree.save(db_path + '\\' + curr_database + '\\' + index_name)
 		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
 			f.write('')
 
@@ -437,7 +453,12 @@ class Helper(object):
 					item[change_index] = value
 				f.write('\n' + str(item) + ';')
 		print('受影响元组数', len(judge_set))
-
+		
+		for item in table_dict[field_name]:
+			if type(item) is str and '_index' in item:
+				cls.modify_B_Plus_Tree(curr_database, table_name, [field_name], table_dict)	# 调整索引
+				break
+		return True
 
 	@classmethod
 	def update_without_where(cls, curr_database, table_name, field_tuple, table_dict):
@@ -457,6 +478,12 @@ class Helper(object):
 			for item in old_data:
 				item[index] = value
 				f.write('\n' + str(item) + ';')
+
+		items = Valid.have_index(table_dict)	# 拿到拥有索引的字段列表
+		if not items:
+			return True
+		cls.modify_B_Plus_Tree(curr_database, table_name, items, table_dict)	# 调整索引
+		# TODO 有相同元素时 删除产生的和插入产生的少个单引号...
 
 
 	@classmethod
@@ -629,25 +656,35 @@ class Helper(object):
 
 	@classmethod
 	def add_index(cls, curr_database, table_name, field_name, table_dict):
-		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
-		index_name = '_'+field_name+'_index'
-		table_dict[field_name].insert(-2, index_name)
-		data_col = table_dict[field_name][-1]
-		print(table_dict)
+		if field_name not in table_dict:
+			print(field_name, '不存在')
+			return False
 
+		index_name = '_'+table_name+'_'+field_name+'_index'
+		if index_name in table_dict[field_name]:
+			print(field_name, '已经存在索引')
+			return False
+		old_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		table_dict[field_name].insert(-1, index_name)
+		data_col = table_dict[field_name][-1]
 		b_plus_tree = B_Plus_Tree(3)
 		for i,x in enumerate(old_data):
 			b_plus_tree.insert([x[data_col], i])
-
-		b_plus_tree.show()
-		b_plus_tree.save(db_path + '\\' + curr_database + '\\' + table_name)
-
-		exit(0)
+		b_plus_tree.save(db_path + '\\' + curr_database + '\\' + index_name)	# 以索引名命铭文件
 
 
 	@classmethod
 	def drop_index(cls, curr_database, table_name, field_name, table_dict):
-		print(table_dict)
+		if field_name not in table_dict:
+			print(field_name, '不存在')
+			return False
+		index_name = '_'+table_name+'_'+field_name+'_index'
+		if index_name not in table_dict[field_name]:
+			print(field_name, '无索引')
+			return False
+
+		os.remove(db_path + '\\' + curr_database + '\\'+ index_name +'.index')
+		table_dict[field_name].remove(index_name)
 
 
 	# 把文件中的数据读入到old_data二维表 并对其规范化
@@ -692,3 +729,19 @@ class Helper(object):
 				value = value.replace('\'', '')
 				break
 		return value
+
+
+	@classmethod
+	def modify_B_Plus_Tree(cls, curr_database, table_name, items, table_dict):
+		'''
+		调整B+树
+		items:	有B+树索引的字段
+		'''
+		new_data = cls.load_old_data_in_list(curr_database, table_name, table_dict)
+		for item in items:
+			index_name = index_name = '_'+table_name+'_'+item+'_index'
+			tree = B_Plus_Tree(3)
+			for i,value in enumerate(new_data):
+				tree.insert([value[ table_dict[item][-1] ], i])
+			tree.save(db_path + '\\' + curr_database + '\\' + index_name)
+			tree.show()

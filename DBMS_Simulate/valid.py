@@ -170,3 +170,18 @@ class Valid(object):
 					values_list[i] = int(values_list[i])
 					break
 		return True
+
+
+	@classmethod
+	def have_index(cls, table_dict):
+		'''
+		检查有无索引
+		return:		返回有索引的字段名列表
+		'''
+		ret = []
+		for k,v in table_dict.items():
+			for item in v:
+				if type(item) is str and '_index' in item:
+					ret.append(k)
+					break
+		return ret
