@@ -362,8 +362,25 @@ class B_Plus_Tree(object):
 		return True
 
 
-	def search_by_dict(self, filed):
-		return self.link_index.get(filed, []).copy()
+	def search_by_dict(self, field):
+		return self.link_index.get(field, []).copy()
+
+
+	def search_by_sign(self, field, sign):
+		judge = {
+				'<':lambda v1,v2: v1<v2, '>':lambda v1,v2: v1>v2,
+				'=':lambda v1,v2: v1==v2, '!=':lambda v1,v2: v1!=v2,
+				'<=':lambda v1,v2: v1<=v2, '>=':lambda v1,v2: v1>=v2
+				}
+		if sign not in judge:
+			return []
+		func = judge[sign]
+		ret_idx = []
+		for x in self.link_value:
+			if func(x, field):
+				for y in self.link_index[x]:
+					ret_idx.append(y)
+		return ret_idx.copy()
 
 
 	def save(self, path):

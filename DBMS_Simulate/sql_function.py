@@ -357,7 +357,7 @@ class SQL_Func(object):
 				print(item, '字段不存在')
 				return False
 		if judge_list:	# 带 where 的查询
-			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, old_table_dict_list)
+			project_data,items_list = Helper.select_with_where(old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, old_table_dict_list, curr_database=cls.curr_database)
 		else:
 			project_data = old_data
 		Helper.project(table_dict, project_data, items_list)

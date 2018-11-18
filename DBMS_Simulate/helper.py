@@ -227,6 +227,7 @@ class Helper(object):
 		value_table = kw.get('value_table', '')
 		field_table_dict = kw.get('field_table_dict', {})
 		value_table_dict = kw.get('value_table_dict', {})
+		curr_database = kw.get('curr_database', '')
 
 		if 'select' in value:
 			# TODO 先用 select 函数得到结果集
@@ -264,6 +265,33 @@ class Helper(object):
 						ret.add(line_num)
 						break
 		else:
+			item_list = table_dict.get(field_name, [])
+			index_name = None
+			for x in item_list:
+				if type(x) is str and '_index' in x:
+					index_name = x
+					break
+			if index_name and curr_database and old_data_list == old_data:	# single t and index
+				tree = B_Plus_Tree(3)
+				tree.load(db_path + '\\' + curr_database + '\\' + index_name)
+
+				value = cls.form_value(table_dict, field_name, value)
+				judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
+				index = table_dict[field_name][-1]	# 字段在哪一列
+
+				f1 = lambda v: tree.search_by_dict(v)
+				f2 = lambda v,s: tree.search_by_sign(v, s)
+				func = f1 if sign == '=' else f2
+				if sign == '=':
+					idx_set = set(func(value)) if func else {}
+				else:
+					idx_set = set(func(value, sign)) if func else {}
+				ret = set()
+				for line_num, item in enumerate(old_data):
+					if judge_func(item[index], value):
+						ret.add(line_num)
+				return ret	
+
 			value = cls.form_value(table_dict, field_name, value)
 			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
 			index = table_dict[field_name][-1]	# 字段在哪一列
@@ -302,6 +330,7 @@ class Helper(object):
 		name_to_index = kw.get('name_to_index', {})
 		old_data_list = kw.get('old_data_list', [])
 		table_dict_list = kw.get('table_dict_list', [])
+		curr_database = kw.get('curr_database', '')
 
 		# 加上空格 方便分割
 		for item in calculate_set | union_set | {'(',')'}:
@@ -355,7 +384,7 @@ class Helper(object):
 							if value in td:
 								value_table = name_to_index[i]
 								value_table_dict = td
-						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, field_table=field_table, value_table=value_table, field_table_dict=field_table_dict, value_table_dict=value_table_dict))
+						result_stack.append(cls.calculate((field, value), calculate_sign_stack.pop(), old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, field_table=field_table, value_table=value_table, field_table_dict=field_table_dict, value_table_dict=value_table_dict, curr_database=curr_database))
 
 			while union_sign_stack and len(result_stack) > 1:
 				set_tuple = (result_stack.pop(), result_stack.pop())
@@ -521,14 +550,15 @@ class Helper(object):
 
 
 	@classmethod
-	def select_with_where(cls, old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, table_dict_list):
+	def select_with_where(cls, old_data, table_dict, items_list, judge_list, name_to_index, old_data_list, table_dict_list, **kw):
 		'''
 		name_to_index:	表名到 old_data_list 位置的映射
 		return:			符合条件的列表, 被选择出的字段
 		'''
+		curr_database = kw.get('curr_database', '')
 		if judge_list[0] != '(':
 			judge_list = '( '+judge_list+' )'
-		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, table_dict_list=table_dict_list)
+		judge_set = cls.parse_where_judge(judge_list, old_data, table_dict, name_to_index=name_to_index, old_data_list=old_data_list, table_dict_list=table_dict_list, curr_database=curr_database)
 		if judge_set == False:
 			return [], []
 		project_data = []
