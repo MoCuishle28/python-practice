@@ -42,4 +42,6 @@ DBMS_Simulate:	模拟一个DBMS（缺少sql编译系统）
 				完成常规的sql操作 如：create, alter, drop, insert, delete, select ...
 				完成索引的添加 (add index)
 
+PatternRecognitionPractice:		模式识别课程实验
+
 解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/
