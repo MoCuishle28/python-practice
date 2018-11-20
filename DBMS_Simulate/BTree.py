@@ -57,10 +57,14 @@ class B_Plus_Tree(object):
 		'''
 		return:		list -> [index1, index2, ...]
 		'''
+		if field not in self.link_index:
+			return []
 		curr_node = self.root
 		ret = []
+		print('-------------------------')
 		while not curr_node.is_leaf():
 			go = 0
+			print(curr_node.value)
 			for v in curr_node.value:
 				if v > field:
 					break
@@ -69,6 +73,8 @@ class B_Plus_Tree(object):
 		if field in curr_node.value:
 			index = curr_node.value.index(field)
 			ret = curr_node.index[curr_node.value[index]]
+		print(curr_node.index)
+		print('-------------------------')
 		return ret.copy()
 
 

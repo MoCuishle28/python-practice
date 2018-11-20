@@ -237,26 +237,48 @@ class Helper(object):
 			out_data = old_data_list[name_to_index[field_table]]		# 外循环数据
 			iner_data = old_data_list[name_to_index[value_table]]			# 内循环
 			if len(out_data) < len(iner_data):						# 让小的数据在内循环
-				out_data, iner_data = iner_data, old_data
+				out_data, iner_data = iner_data, out_data
 				field_name, value = value, field_name
 				field_table_dict, value_table_dict = value_table_dict, field_table_dict
-
 
 			judge_func = sign_set[sign] if sign in sign_set else 'exist'		# TODO 写 exist
 			index = field_table_dict[field_name][-1]		# 内循环字段在哪一列
 			value_index = value_table_dict[value][-1]		# 外循环字段
+
+			item_list = table_dict.get(field_name, [])
+			index_name = None
+			for x in item_list:
+				if type(x) is str and '_index' in x:
+					index_name = x
+					break
+			v_name = None
+			item_list = table_dict.get(value, [])
+			for x in item_list:
+				if type(x) is str and '_index' in x:
+					v_name = x
+					break
+
+			tree1 = B_Plus_Tree(3)
+			tree2 = B_Plus_Tree(3)
+			if index_name:
+				tree1.load(db_path + '\\' + curr_database + '\\' + index_name)
+				tree1.show()
+			if v_name:
+				tree2.load(db_path + '\\' + curr_database + '\\' + v_name)
+				tree2.show()
 
 			link_list = []	# 选出来的列表合并后放入此列表
 			for x in out_data:
 				for y in iner_data:
 					if judge_func(x[index], y[value_index]):
 						link_list.append(x + y)
+						tree1.search_by_node(x[index])
+						tree2.search_by_node(y[value_index])
 
-			f1 = lambda v1,v2: v1 == v2
+			f1 = lambda v1,v2: v1 == v2	
 			f2 = lambda v1,v2: set(v1).issubset(set(v2))
 			# judge_func = f1 if len(old_data[0]) == len(link_list[0]) else f2
 			judge_func = f2
-			
 			ret = set()
 			for line_num, item in enumerate(old_data):
 				for judge_item in link_list:
@@ -281,6 +303,10 @@ class Helper(object):
 
 				f1 = lambda v: tree.search_by_dict(v)
 				f2 = lambda v,s: tree.search_by_sign(v, s)
+
+				tree.show()
+				tree.search_by_node(value)
+
 				func = f1 if sign == '=' else f2
 				if sign == '=':
 					idx_set = set(func(value)) if func else {}
