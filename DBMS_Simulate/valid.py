@@ -185,3 +185,46 @@ class Valid(object):
 					ret.append(k)
 					break
 		return ret
+
+
+	@classmethod
+	def valid_oper(cls, user_can_use, can_use_db, command_str, curr_database, table_set):
+		'''
+		user_can_use:	table_name: [db_name, oper1, oper2, ...]
+		can_use_db:		用户能够use的db
+		command_str:	输入的操作字符串 如: select * from b, t where t1 = id;
+		curr_database:	当前数据库
+		table_set:		当前数据库的数据表
+		'''
+		func_map = {
+			'use' 	:   re.match(r'\s*use\s*(?P<name>\w+)\s*$', command_str),
+			'alter' : re.match(r'\s*alter\s*table\s*(?P<name>\w+)\s*(?P<alter_type>\w+)\s*(?P<operate>.+)\s*default\s*(?P<default_value>.+)\s*$',command_str),
+			'insert': re.match(r'\s*insert\s*into\s*(?P<name>\w+)(?P<target_items>.*)\s*values\((?P<values_list>.+)\)\s*$', command_str),
+			'delete': re.match(r'\s*delete\s*from\s*(?P<name>\w+)\s*(where)?\s*(?P<judge_list>.*)$', command_str),
+			'update':re.match(r'\s*update\s*(?P<name>\w+)\s*set\s*(?P<field_name>\w+)\s*=\s*(?P<value>.+)\s*$', command_str),
+			'select':re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<name>\w+)\s*$', command_str)
+		}
+
+		oper = command_str.split()[0]
+		if oper not in func_map:
+			return False
+
+		result = func_map[oper]
+		if not result:
+			func_map_with_where = {
+				'update': re.match(r'\s*update\s*(?P<name>\w+)\s*set\s*(?P<field_name>\w+)\s*=\s*(?P<value>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str),
+				'select': re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
+			}
+			result = func_map_with_where.get(oper)
+			if not result:
+				return False
+
+		name = result.group('name').strip()
+		if oper == 'use':
+			if name not in can_use_db:				
+				return False
+			else:
+				return True
+		elif oper not in user_can_use.get(name, []) or curr_database not in user_can_use.get(name, []):
+			return False
+		return True

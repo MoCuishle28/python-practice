@@ -67,6 +67,20 @@ class SQL_Func(object):
 				print('(NULL)')
 			for item in cls.tables_set:
 				print(item)
+		elif show_type == 'user':
+			print('----------')
+			print('User:')
+			print('----------')
+			with open(dict_path+'\\user.json', 'r') as f:
+				user_data = json.load(f)
+			for k,v in user_data.items():
+				print(k, end='> ')
+				for k2,v2 in v.items():
+					if k2 != 'password':
+						print(v2.split(';'))
+				print('----------')
+		else:
+			return False
 		print('----------')
 		return True
 
@@ -93,7 +107,7 @@ class SQL_Func(object):
 				with open(db_path + '\\' + name + '\\tables.dict', 'w') as f:
 					f.write('')
 		elif operate_type == 'user':
-			pass
+			return Helper.create_user(command_str)
 		else:	# 已使用数据库 则创建数据表
 			return cls.createTable(command_str)
 		return True
@@ -213,9 +227,17 @@ class SQL_Func(object):
 				print(name, '不存在')
 				return False
 			Helper.drop_table(cls.curr_database, name, cls.tables_set)
-		elif operate_type == 'index':
-			# TODO 删除索引
-			pass
+		elif operate_type == 'user':		
+			with open(dict_path+'\\user.json', 'r') as f:
+				user_data = json.load(f)
+
+			if name not in user_data:
+				print(name, '用户不存在')
+				return False
+
+			del user_data[name]
+			with open(dict_path+'\\user.json', 'w') as f:
+				json.dump(user_data, f)
 		else:
 			print(operate_type, '输入错误')
 			return False	
@@ -331,6 +353,7 @@ class SQL_Func(object):
 		# 先匹配有where的
 		# select * from t1 as t,t2 where t.id <= 1 or (s1 = 't2_a2' and id >= 2);  多表查询
 		# select s.name,c.name,s from stu as s,course as c,score where sid=s.id and cid = c.id;
+		# select * from b,t where id = t1 and id != 4;
 		result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>.+)\s*where\s*(?P<judge_list>.*)\s*$', command_str)
 		if not result or not cls.curr_database:
 			result = re.match(r'\s*select\s*(?P<items_list>.+)\s*from\s*(?P<table_name>\w+)\s*$', command_str)

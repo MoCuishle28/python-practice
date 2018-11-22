@@ -3,14 +3,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 user = {
 	'root':{
-			'password':generate_password_hash('123456'),
+			'password':generate_password_hash('123'),
 			'permissions':'w-r-u'
 	},
-
-	'user1':{
-			'password':generate_password_hash('123456'),
-			'permissions':'r'
-	}
 }
 
 
@@ -25,8 +20,8 @@ for k,v in data.items():
 	print(k, ' ', v)
 
 # json的文件相关
-# with open('user.json', 'w') as f:
-# 	json.dump(user, f)
+with open('user.json', 'w') as f:
+	json.dump(user, f)
 
 
 # with open('user.json', 'r') as f:

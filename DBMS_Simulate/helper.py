@@ -6,11 +6,13 @@ import re
 import json
 import shutil
 import itertools
+import getpass
 
 
 from config import db_path, dict_path
 from valid import Valid
 from BTree import B_Plus_Tree
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class Helper(object):
@@ -186,6 +188,44 @@ class Helper(object):
 
 
 	@classmethod
+	def create_user(cls, command_str):
+		'''
+		create user u1(t t w,r & school stu r);
+		'''
+		result = re.match(r'\s*create\s*user\s*(?P<username>\w+)\((?P<permissions>.+)\)\s*$', command_str)
+		if not result:
+			return False
+
+		username = result.group('username')
+		permission_list = result.group('permissions').split('&')
+		with open(dict_path+'\\user.json', 'r') as f:
+			user_data = json.load(f)
+		if username in user_data:
+			print(username, '已经存在')
+			return False
+
+		user_data[username] = {}
+
+		pwd = getpass.getpass('password>')
+		tmp = getpass.getpass('again>')
+		if pwd != tmp:
+			print('输入密码不一致')
+			return False
+
+		user_data[username]['password'] = generate_password_hash(pwd)
+
+		user_data[username]['permissions'] = ''
+		for item in permission_list:
+			x = item.split()
+			db_name, table_name, opers = x[0], x[1], x[2]
+			user_data[username]['permissions'] += db_name+'-'+table_name+'-'+opers+';'
+		user_data[username]['permissions'] = user_data[username]['permissions'].strip(';')
+		with open(dict_path+'\\user.json', 'w') as f:
+			json.dump(user_data, f)
+		return True
+
+
+	@classmethod
 	def drop_database(cls, database_name):
 		with open(dict_path+'\\'+'database.dict', 'r') as f:
 			database_list = f.read().split()
@@ -283,6 +323,7 @@ class Helper(object):
 			for line_num, item in enumerate(old_data):
 				for judge_item in link_list:
 					# select * from t,t1 as tt where s1 = tt.s1;
+					# select * from b,t where id = t1 and t1 != 1;
 					if judge_func(judge_item, item):
 						ret.add(line_num)
 						break
@@ -367,6 +408,18 @@ class Helper(object):
 			if i+1 < size and judge_list[i] in calculate_set and judge_list[i+1] in calculate_set:
 				judge_list[i] = judge_list[i] + judge_list[i+1]
 				judge_list.pop(i+1)
+
+		change_judge = judge_list.copy()
+		for i,x in enumerate(change_judge):
+			if x not in table_dict and x != '(' and x != ')' and x not in calculate_set and x not in union_set:
+				print(i)
+				change_judge.insert(i-2, '(')
+				change_judge.insert(i+2, ')')
+				break
+		s = ''
+		for c in change_judge:
+			s += c + ' '
+		print('where', s)
 
 		# 进行运算
 		try:
