@@ -6,11 +6,13 @@ import matplotlib.pylab as plt
 import matplotlib.image as mpimg # mpimg 用于读取图片
 import numpy as np
 
+
 # Test code
 # def createDataSet():
 #     group = array([[1.0,1.1],[1.0,1.0],[0,0],[0,0.1]])
 #     labels = ['A','A','B','B']
 #     return group,labels
+
 
 def imgToVector(fileName):
     # create a vector (every elements is zero)1行1024列
@@ -22,6 +24,7 @@ def imgToVector(fileName):
             for j in range(32):
                 retVect[0,32*i+j] = int(lineStr[j])
     return retVect
+
 
 def classify(inVector, dataSet, labels, k):
     """

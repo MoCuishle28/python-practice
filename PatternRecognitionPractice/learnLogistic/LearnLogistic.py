@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
+
 def sig(x):
     """
     Sigmoid函数
@@ -9,6 +10,7 @@ def sig(x):
     :return: sigmoid(x) (mat):Sigmoid值
     """
     return 1.0 / (1 + np.exp(-x))
+
 
 def load_TestData(file_name, n):
     """
@@ -34,6 +36,7 @@ def load_TestData(file_name, n):
     f.close()
     return np.mat(feature_data)
 
+
 def predict(data, w):
     """
     对数据进行预测
@@ -50,6 +53,7 @@ def predict(data, w):
             h[i,0] = 1.0
     return h
 
+
 def error_rate(h, label):
     """
     计算当前损失函数值
@@ -65,6 +69,7 @@ def error_rate(h, label):
         else:
             sum_err -= 0
     return sum_err / m
+
 
 def lr_train_bgd(feature, label, maxCycle, alpha):
     """
@@ -125,6 +130,7 @@ def lr_train_bgd(feature, label, maxCycle, alpha):
     plt.close()
     return w
 
+
 def load_data(file_name):
     """
     :param file_name: 训练样本位置
@@ -146,6 +152,7 @@ def load_data(file_name):
         label_data.append(label_tmp)
     f.close()
     return np.mat(feature_data), np.mat(label_data)
+
 
 def save_model(file_name, w):
     """
@@ -181,6 +188,7 @@ def load_weight(file_name):
     f.close()
     return np.mat(w)
 
+
 def save_result(file_name, result):
     """
     保存最终预测结果
@@ -195,6 +203,7 @@ def save_result(file_name, result):
     f_result = open(file_name+'.txt','w')
     f_result.write("\t".join(tmp))
     f_result.close()
+
 
 if __name__ == "__main__":
     print('--------------------load data----------------------')
