@@ -276,7 +276,7 @@ class Helper(object):
 
 			out_data = old_data_list[name_to_index[field_table]]		# 外循环数据
 			iner_data = old_data_list[name_to_index[value_table]]			# 内循环
-			if len(out_data) < len(iner_data):						# 让小的数据在内循环
+			if len(out_data) > len(iner_data):						# 让小的数据在外循环
 				out_data, iner_data = iner_data, out_data
 				field_name, value = value, field_name
 				field_table_dict, value_table_dict = value_table_dict, field_table_dict

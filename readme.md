@@ -44,4 +44,7 @@ DBMS_Simulate:	模拟一个DBMS（缺少sql编译系统）
 
 PatternRecognitionPractice:		模式识别课程实验
 
+DataVisual:		数值分析实验(包括拉格朗日插值法, 牛顿插值法......), matplotlib练习, 各种调度算法和银行家算法
+
+
 解决包安装失败网址 : http://www.lfd.uci.edu/~gohlke/pythonlibs/
