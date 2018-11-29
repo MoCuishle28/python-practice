@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from matplotlib import pyplot as plt
+from sklearn.decomposition import PCA
 
 
 SZ=20
@@ -56,7 +57,20 @@ trainData = np.float32(hogdata).reshape(-1,64)
 print(trainData[0].shape)
 print(trainData[0])
 
+pca = PCA(n_components=2, svd_solver='arpack')
+test_pca = trainData
+pca_mat = pca.fit_transform(test_pca)
+np.savetxt("trainMat.txt", pca_mat)
+
+pca_3d = PCA(n_components=3, svd_solver='arpack')
+test_pca_3d = trainData
+pca_mat = pca_3d.fit_transform(test_pca_3d)
+np.savetxt("trainMat_3D.txt", pca_mat)
+
 responses = np.repeat(np.arange(10),250)[:,np.newaxis]
+
+np.savetxt("labels.txt", responses)
+
 
 svm = cv.ml.SVM_create()
 svm.setKernel(cv.ml.SVM_LINEAR)
@@ -76,4 +90,4 @@ result = svm.predict(testData)[1]
 mask = result==responses
 correct = np.count_nonzero(mask)
 
-# print(correct*100.0/result.size)
+print(correct*100.0/result.size)
