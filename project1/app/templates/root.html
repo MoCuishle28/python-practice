@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+	<title>管理员页面</title>
+{% endblock %}
+
+{% block content %}
+{{super()}}
+
+<h2 align="center">管理</h2>
+
+<div>
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs" role="tablist">
+		<li role="presentation" class="active">
+			<a href="#User" data-toggle="tab">User</a>
+		</li>
+
+		<li role="presentation">
+			<a href="#Book" data-toggle="tab">Book</a>
+		</li>
+
+		<li role="presentation">
+			<a href="#messages" data-toggle="tab">Drift</a>
+		</li>
+
+		<li role="presentation">
+			<a href="#settings" data-toggle="tab">Wish</a>
+		</li>
+	 </ul>
+
+	<!-- Tab panes -->
+	<div class="tab-content">
+
+		<div role="tabpanel" class="tab-pane active" id="User">
+			<div class="table-responsive">
+				<!-- 表格 class="table" table-bordered加上边框 table-striped加上隔行变色 table-hover鼠标悬停效果 -->
+				<form action="#" method="post">
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>用户名</th>
+							<th>地址</th>
+							<th>phone</th>
+							<th>e-mail</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>铁锤</td>
+							<td>憨憨村</td>
+							<td>phone</td>
+							<th>e-mail</th>
+							<td><button class="btn btn-danger" type="submit">删除</button> <button class="btn btn-primary">编辑</button></td>
+						</tr>
+
+						<tr>
+							<td>2</td>
+							<td>铁杵</td>
+							<td>铁杵镇</td>
+							<td>phone</td>
+							<th>e-mail</th>
+							<td><button class="btn btn-danger" type="submit">删除</button> <button class="btn btn-primary">编辑</button></td>
+						</tr>
+					</tbody>
+				</table>
+				</form>
+			</div>
+		</div>
+
+		<div role="tabpanel" class="tab-pane" id="Book">
+			<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Title</th>
+							<th>author</th>
+							<th>publisher</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>铁锤宝典</td>
+							<td>铁锤</td>
+							<td>铁锤出版社</td>
+							<td><button class="btn btn-danger" type="submit">删除</button> <button class="btn btn-primary">编辑</button></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+	    <div role="tabpanel" class="tab-pane" id="messages">
+	    	<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>姓名</th>
+							<th>爱好</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>铁锤</td>
+							<td>发憨憨</td>
+							<td><button class="btn btn-danger">删除</button> <button class="btn btn-primary">编辑</button></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+	    </div>
+
+	    <div role="tabpanel" class="tab-pane" id="settings">
+	    	<div class="table-responsive">
+				<table class="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>姓名</th>
+							<th>爱好</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>铁锤</td>
+							<td>发憨憨</td>
+							<td><button class="btn btn-danger">删除</button> <button class="btn btn-primary">编辑</button></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+	</div>	
+</div>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+{% endblock %}

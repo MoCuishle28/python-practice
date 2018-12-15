@@ -369,7 +369,7 @@ class SQL_Func(object):
 		table_dict_list,old_data_list,new_field_list, name_to_index, old_table_dict_list = Helper.load_dict_and_data(cls.curr_database, table_name_list, cls.tables_set, items_list)
 
 		if len(table_name_list) > 1:	# 如果有多个表
-			table_dict, old_data = Helper.descartes(table_dict_list, old_data_list)		# 进行笛卡儿积
+			table_dict, old_data = Helper.cartesian_product(table_dict_list, old_data_list)
 		else:							# 否则单个表处理
 			table_dict = table_dict_list
 			old_data = old_data_list

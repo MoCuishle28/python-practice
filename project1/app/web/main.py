@@ -272,3 +272,9 @@ def heart():
 	if session.get('username'):
 		username = session.get('username')
 	return render_template('count.html', bookList=books_list, username=username)
+
+
+@web.route('/root')
+def root():
+	username = session.get('username')
+	return render_template('root.html', username=username)

@@ -409,17 +409,17 @@ class Helper(object):
 				judge_list[i] = judge_list[i] + judge_list[i+1]
 				judge_list.pop(i+1)
 
-		change_judge = judge_list.copy()
-		for i,x in enumerate(change_judge):
-			if x not in table_dict and x != '(' and x != ')' and x not in calculate_set and x not in union_set:
-				print(i)
-				change_judge.insert(i-2, '(')
-				change_judge.insert(i+2, ')')
-				break
-		s = ''
-		for c in change_judge:
-			s += c + ' '
-		print('where', s)
+		# change_judge = judge_list.copy()
+		# for i,x in enumerate(change_judge):
+		# 	if x not in table_dict and x != '(' and x != ')' and x not in calculate_set and x not in union_set:
+		# 		print(i)
+		# 		change_judge.insert(i-2, '(')
+		# 		change_judge.insert(i+2, ')')
+		# 		break
+		# s = ''
+		# for c in change_judge:
+		# 	s += c + ' '
+		# print('where', s)
 
 		# 进行运算
 		try:
@@ -522,11 +522,10 @@ class Helper(object):
 		with open(db_path + '\\' + curr_database + '\\'+table_name+'.json', 'r') as f:
 			table_dict = json.load(f)
 		items = Valid.have_index(table_dict)
-		if not items:
-			return
-		for item in items:
-			index_name = index_name = '_'+table_name+'_'+item+'_index'
-			tree.save(db_path + '\\' + curr_database + '\\' + index_name)
+		if items:
+			for item in items:
+				index_name = index_name = '_'+table_name+'_'+item+'_index'
+				tree.save(db_path + '\\' + curr_database + '\\' + index_name)
 		with open(db_path + '\\' + curr_database + '\\'+ table_name +'.db', 'w') as f:
 			f.write('')
 
@@ -725,11 +724,11 @@ class Helper(object):
 
 
 	@classmethod
-	def descartes(cls, table_dict_list, old_data_list):
+	def cartesian_product(cls, table_dict_list, old_data_list):
 		'''
 		table_dict_list:	包含多个表的数据字典list
 		old_data_list:		包含多个表的数据 每个元素是一个表的 old_data
-		return:				笛卡儿积后的数据字典,  笛卡儿积后的old_data
+		return:				数据字典,  笛卡儿积后的old_data
 		'''
 		curr_data = []
 		curr_table_dict = {}

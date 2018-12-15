@@ -72,6 +72,9 @@
           <li class="active"><a href="{{url_for('web.driftList')}}">你的Drift</a></li>
           <li class="active"><a href="{{url_for('web.heart')}}">热榜</a></li>
           {% endif %}
+          {% if username == 'root' %}
+          <li class="active"><a href="{{url_for('web.root')}}">管理</a></li>
+          {% endif %}
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
