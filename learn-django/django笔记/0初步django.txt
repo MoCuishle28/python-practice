@@ -222,4 +222,14 @@ IndexView需要一个函数返回index显示的内容  def get_queryset(self):..
 	3.给每个测试方法起个能描述其功能的名字
 
 
-//TODO 第 6 部分 	自定义 应用 的界面和风格
+静态文件的处理（如：css）：
+需要在应用目录下创建 static 文件夹，在static下再创建 polls(app名) 文件夹用于存放css
+
+在使用css的模板上写：
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %}">
+
+	其中：
+		{% static %} 模板标签会生成静态文件的绝对路径。
+
+而图片文件则需要在 static/polls 下再创建 images 文件夹
