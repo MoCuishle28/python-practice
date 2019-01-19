@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
+	# 匹配到 polls/ 后 剩下的url部分交由 polls.urls(polls/urls.py) 中的urlpatterns去匹配
     path('polls/', include('polls.urls')),
     path('admin/', admin.site.urls),
 ]

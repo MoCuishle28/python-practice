@@ -87,6 +87,7 @@ datetime.datetime(2012, 2, 26, 13, 0, 0, 775217, tzinfo=<UTC>)
 
 若没有符合get函数中的条件 会抛出异常
 
+
 通过外键创建数据元组：
 '''
 >>> q = Question.objects.get(pk=1)
@@ -113,6 +114,7 @@ datetime.datetime(2012, 2, 26, 13, 0, 0, 775217, tzinfo=<UTC>)
 3
 '''
 
+
 django自带的管理员界面：
 需要先用manage.py创建管理员用户	py manage.py createsuperuser
 然后访问 http://127.0.0.1:8000/admin/
@@ -127,4 +129,97 @@ from .models import Question
 admin.site.register(Question)
 '''
 
-# TODO Writing your first Django app, part 3
+视图函数：
+1.应用中的 views.py 中编写视图函数，需要的参数也要写在视图函数的参数中
+2.需要在应用中的 urls.py 进行配置
+例如：
+'''
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    # ex: /polls/
+    path('', views.index, name='index'),
+    # ex: /polls/5/
+    path('<int:question_id>/', views.detail, name='detail'),
+    # ex: /polls/5/results/
+    path('<int:question_id>/results/', views.results, name='results'),
+    # ex: /polls/5/vote/
+    path('<int:question_id>/vote/', views.vote, name='vote'),
+]
+'''
+
+需要结合html返回时，要在应用目录下新建文件夹template（在应用中使用相对于该template的相对路径）
+只有一个应用对应一个template 才能做到把应用当作django项目的插件
+
+
+使用以下写法可以省略 try-catch 语句块捕抓查询为空的异常
+question = get_object_or_404(Question, pk=question_id)
+
+
+移除template中的硬编码：
+将硬编码换成以下使用url标签的编码方式
+'detail' 是因为在应用的 urls.py 中 name='detail' （相当于给视图函数起名了？）
+要改url时 只需要在urls.py中修改即可
+'''
+<li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+'''
+在 'detial' 后加上参数就行
+
+但是在同一个项目中的多个应用里 name可能相同，所以需要给应用加上命名空间 app_name
+ex: 在polls/urls.py中
+加上 app_name = 'polls'
+
+ex:模板index.html中需要修改为
+'''
+<li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+'''
+
+
+表单的提交：
+每个表单 <form> 都需要在<form></form>上加 {% csrf_token %} 来防止跨站点请求伪造(Cross Site Request Forgeries) -> csrf
+
+通过 reques.POST['名字(即name)'] 获得表单元素的value（类型为str）通过该方式获取可能会抛出KeyError异常
+
+HttpResponseRedirect 是重定向请求（django的站内跳转请求是？）
+在成功处理form的数据后 我们总是应该返回一个 HttpResponseRedirect 重定向
+在 HttpResponseRedirect 中 使用 reverse() 函数构造url避免硬编码
+ex:
+return HttpResponseRedirect(reverse('polls:results', args=(question_id,)) )
+其中：
+	results视图函数需要一个 question_id 作为参数
+	reverse函数会返回一个字符串 	如：'/polls/3/results/'
+
+
+使用generic views：
+（原理不懂啊... 是会自动通过pk查询数据吗？ TODO ）
+需要在urls.py中使用
+ex：	
+	path('', views.IndexView.as_view(), name='index'),
+	# NOTE: question_id 改为了 pk  DetailView期望获得一个pk（会自动通过pk查找相应的数据？）
+	path('<int:pk>/', views.DetailView.as_view(), name='detail'),
+	path('<int:pk>/results/', views.ResultsView.as_view(), name='results'),
+
+默认情况下，DetialView 这个 generic view 会返回 template_name 为 <app name>/<model name>_detail.html
+ex：	'polls/question_detial.html'
+可以通过写 template_name 来指定返回html的路径
+
+对于 ListView：自动生成的 context 变量是 question_list
+为了覆盖这个行为，我们提供 context_object_name 属性，表示我们想使用 latest_question_list
+ex：context_object_name = 'latest_question_list'
+IndexView需要一个函数返回index显示的内容  def get_queryset(self):... 返回一个迭代器（集合？）包含显示内容
+
+
+自动化测试：
+在应用中的 tests.py 写继承于 django.test.TestCase 的类 ，类中写测试函数
+函数中最后为语句 ex：  self.assertIs(future_question.was_published_recently(), False)
+然后运行	py manage.py test polls 查看测试结果（这里的polls 会使manage.py去寻找polls的测试代码）
+
+写测试代码时的建议：
+	1.对于每个模型和视图都建立单独的 TestClass
+	2.每个测试方法只测试一个功能
+	3.给每个测试方法起个能描述其功能的名字
+
+
+//TODO 第 6 部分 	自定义 应用 的界面和风格

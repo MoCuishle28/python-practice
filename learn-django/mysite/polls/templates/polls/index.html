@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Index</title>
+</head>
+<body>
+
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+    	
+        {#<!-- <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li> -->#}
+        
+        <!-- 
+	        将硬编码换成以下的url标签形式
+	        'detail' 是因为urls.py中 name='detail'  似乎是在'detial' 后加上参数就行
+	        要改url时 只需要在urls.py中修改即可
+        -->
+        <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+
+</body>
+</html>
